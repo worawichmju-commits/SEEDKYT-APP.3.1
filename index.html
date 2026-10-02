@@ -1,0 +1,1980 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#1976D2">
+<title>ระบบจัดการเมล็ดพันธุ์ • มิ่งการเกษตร</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🌱</text></svg>">
+<style>
+  :root{
+    --blue-50:#F2F8FF; --blue-100:#E1EFFF; --blue-200:#C4E0FA; --blue-300:#9CCBF5;
+    --blue-500:#2196F3; --blue-600:#1976D2; --blue-700:#1565C0;
+    --ink:#16324F; --muted:#5B7286; --line:#DCEAF7; --card:#FFFFFF; --bg:#F6FAFE;
+    --green:#16A34A; --green-bg:#E8F7EE; --amber:#B45309; --amber-bg:#FEF3D8;
+    --red:#DC2626; --red-bg:#FDE8E8; --radius:16px;
+    --shadow:0 1px 3px rgba(20,50,80,.07), 0 4px 14px rgba(20,50,80,.05);
+  }
+  *{box-sizing:border-box; margin:0; padding:0}
+  html{-webkit-text-size-adjust:100%}
+  body{
+    font-family:'Noto Sans Thai','Sarabun','Prompt',-apple-system,'Segoe UI',Tahoma,sans-serif;
+    background:var(--bg); color:var(--ink); min-height:100vh; font-size:15px; line-height:1.55;
+  }
+  /* ---------- Topbar ---------- */
+  .topbar{position:sticky; top:0; z-index:50; background:rgba(255,255,255,.92); backdrop-filter:blur(10px);
+    border-bottom:1px solid var(--line); padding:10px clamp(12px,3vw,28px);
+    display:flex; align-items:center; gap:14px; flex-wrap:wrap;}
+  .brand{display:flex; align-items:center; gap:10px; min-width:0}
+  .brand .logo{width:42px; height:42px; border-radius:12px; flex:0 0 auto;
+    background:linear-gradient(135deg,var(--blue-500),var(--blue-700)); display:grid; place-items:center;
+    color:#fff; font-size:22px; box-shadow:0 4px 10px rgba(25,118,210,.35)}
+  .brand h1{font-size:16px; line-height:1.2; white-space:nowrap}
+  .brand small{display:block; color:var(--muted); font-weight:400; font-size:11.5px}
+  .spacer{flex:1}
+  .pill{display:inline-flex; align-items:center; gap:6px; padding:6px 12px; border-radius:999px;
+    font-size:12.5px; font-weight:600; border:1px solid var(--line); background:#fff; color:var(--muted); white-space:nowrap}
+  .pill .dot{width:8px; height:8px; border-radius:50%; background:#94A3B8}
+  .pill.ok{color:var(--green); border-color:#BFE8CD; background:var(--green-bg)} .pill.ok .dot{background:var(--green)}
+  .pill.busy{color:var(--blue-700); border-color:var(--blue-300); background:var(--blue-100)} .pill.busy .dot{background:var(--blue-600); animation:pulse 1s infinite}
+  .pill.off{color:var(--amber); border-color:#F2DCA6; background:var(--amber-bg)} .pill.off .dot{background:#D97706}
+  @keyframes pulse{50%{opacity:.25}}
+  select,input,button,textarea{font-family:inherit; font-size:14.5px; color:var(--ink)}
+  input,select,textarea{background:#fff; border:1.5px solid var(--blue-200); border-radius:10px; padding:9px 11px; width:100%; outline:none; transition:.15s}
+  textarea{resize:vertical; min-height:52px}
+  .notes-cell{max-width:220px; min-width:120px; white-space:normal; font-size:12.5px}
+  #tblIntake td.nw{white-space:nowrap}
+  input:focus,select:focus{border-color:var(--blue-500); box-shadow:0 0 0 3px rgba(33,150,243,.15)}
+  input.err,select.err{border-color:var(--red); background:#FFF7F7}
+  .top-tools{display:flex; align-items:center; gap:8px; flex-wrap:wrap}
+  .top-tools .season-wrap{display:flex; align-items:center; gap:6px}
+  .top-tools .season-wrap select{width:auto; min-width:130px}
+  .btn{display:inline-flex; align-items:center; justify-content:center; gap:7px; border:none; cursor:pointer;
+    border-radius:10px; padding:9px 16px; font-weight:600; transition:.15s; white-space:nowrap; user-select:none}
+  .btn:active{transform:scale(.97)}
+  .btn.primary{background:linear-gradient(135deg,var(--blue-500),var(--blue-600)); color:#fff; box-shadow:0 3px 10px rgba(25,118,210,.3)}
+  .btn.primary:hover{filter:brightness(1.06)}
+  .btn.ghost{background:#fff; border:1.5px solid var(--blue-200); color:var(--blue-700)}
+  .btn.ghost:hover{background:var(--blue-50)}
+  .btn.soft{background:var(--blue-100); color:var(--blue-700)}
+  .btn.danger{background:var(--red-bg); color:var(--red)}
+  .btn.green{background:var(--green); color:#fff}
+  .btn.sm{padding:6px 11px; font-size:13px; border-radius:8px}
+  .btn:disabled{opacity:.5; cursor:not-allowed}
+  /* ---------- Layout ---------- */
+  .wrap{max-width:1120px; margin:0 auto; padding:18px clamp(12px,3vw,28px) 90px}
+  .tabs{display:flex; gap:4px; background:var(--blue-100); padding:4px; border-radius:14px; width:max-content; max-width:100%;
+    margin:16px auto 20px; overflow-x:auto; scrollbar-width:none}
+  .tabs::-webkit-scrollbar{display:none}
+  .tabs button{border:none; background:transparent; padding:9px 18px; border-radius:11px; cursor:pointer;
+    font-weight:600; color:var(--blue-700); font-size:14px; white-space:nowrap; display:flex; gap:7px; align-items:center}
+  .tabs button.active{background:var(--blue-600); color:#fff; box-shadow:0 3px 8px rgba(25,118,210,.35)}
+  .page{display:none; animation:fadein .25s ease}
+  .page.active{display:block}
+  @keyframes fadein{from{opacity:0; transform:translateY(6px)} to{opacity:1}}
+  .card{background:var(--card); border:1px solid var(--line); border-radius:var(--radius); box-shadow:var(--shadow); padding:20px}
+  .card + .card{margin-top:16px}
+  .card h2{font-size:17px; display:flex; align-items:center; gap:9px; margin-bottom:4px}
+  .card h2 .ic{width:34px; height:34px; border-radius:10px; background:var(--blue-100); display:grid; place-items:center; font-size:17px; flex:0 0 auto}
+  .card .sub{color:var(--muted); font-size:13px; margin-bottom:16px}
+  /* ---------- Forms ---------- */
+  .grid{display:grid; gap:12px; grid-template-columns:repeat(auto-fit,minmax(170px,1fr))}
+  .field label{display:block; font-size:12.5px; font-weight:600; color:var(--muted); margin-bottom:5px}
+  .field label b{color:var(--red)} 
+  .field .hint{font-size:11px; color:#8AA2B5; margin-top:3px}
+  .form-foot{display:flex; gap:10px; margin-top:16px; flex-wrap:wrap; align-items:center}
+  /* ---------- Stat cards ---------- */
+  .stats{display:grid; gap:14px; grid-template-columns:repeat(auto-fit,minmax(210px,1fr)); margin-bottom:16px}
+  .stat{background:var(--card); border:1px solid var(--line); border-radius:var(--radius); box-shadow:var(--shadow);
+    padding:18px; position:relative; overflow:hidden}
+  .stat::before{content:''; position:absolute; inset:0 auto 0 0; width:5px; background:var(--blue-500)}
+  .stat.g::before{background:var(--green)} .stat.o::before{background:#F59E0B} .stat.v::before{background:#8B5CF6}
+  .stat .t{font-size:12.5px; font-weight:600; color:var(--muted); display:flex; gap:6px; align-items:center}
+  .stat .v{font-size:clamp(24px,4vw,32px); font-weight:800; margin-top:2px; letter-spacing:-.5px}
+  .stat .u{font-size:13px; color:var(--muted); font-weight:600; margin-left:4px}
+  .stat .d{font-size:11.5px; color:#8AA2B5; margin-top:2px}
+  .chips{display:flex; gap:8px; flex-wrap:wrap; margin-top:4px}
+  .chip{background:var(--blue-100); color:var(--blue-700); border-radius:999px; padding:6px 13px; font-size:12.5px; font-weight:600}
+  /* ---------- Tables ---------- */
+  .table-wrap{overflow-x:auto; border:1px solid var(--line); border-radius:12px; margin-top:14px; background:#fff}
+  table{width:100%; border-collapse:collapse; font-size:13.5px; min-width:640px}
+  th{background:var(--blue-50); color:var(--blue-700); text-align:left; padding:10px 12px; font-size:12px;
+    text-transform:uppercase; letter-spacing:.4px; white-space:nowrap; border-bottom:1px solid var(--line)}
+  td{padding:10px 12px; border-bottom:1px solid #ECF4FB; vertical-align:middle}
+  tr:last-child td{border-bottom:none}
+  tbody tr:hover{background:#FAFDFF}
+  .num{font-variant-numeric:tabular-nums; font-weight:600}
+  .badge{display:inline-block; padding:3px 10px; border-radius:999px; font-size:11.5px; font-weight:700; white-space:nowrap}
+  .badge.b-blue{background:var(--blue-100); color:var(--blue-700)}
+  .badge.b-amber{background:var(--amber-bg); color:var(--amber)}
+  .badge.b-green{background:var(--green-bg); color:var(--green)}
+  .badge.b-gray{background:#EEF2F6; color:var(--muted)}
+  .badge.b-red{background:var(--red-bg); color:var(--red)}
+  .empty{padding:36px 16px; text-align:center; color:var(--muted)}
+  .empty .big{font-size:38px; margin-bottom:8px}
+  /* ---------- Merge page ---------- */
+  .merge-grid{display:grid; gap:16px; grid-template-columns:1.6fr 1fr; align-items:start}
+  @media(max-width:860px){.merge-grid{grid-template-columns:1fr}}
+  .farmer-row{display:flex; gap:12px; align-items:center; padding:12px 14px; border:1.5px solid var(--line);
+    border-radius:12px; margin-bottom:9px; background:#fff; cursor:pointer; transition:.15s}
+  .farmer-row:hover{border-color:var(--blue-300); background:#FBFDFF}
+  .farmer-row.sel{border-color:var(--blue-500); background:var(--blue-50); box-shadow:0 0 0 3px rgba(33,150,243,.12)}
+  .farmer-row input[type=checkbox]{width:19px; height:19px; accent-color:var(--blue-600); flex:0 0 auto; cursor:pointer}
+  .farmer-row .fx{flex:1; min-width:0}
+  .farmer-row .fn{font-weight:700; font-size:14.5px}
+  .farmer-row .fm{font-size:12px; color:var(--muted)}
+  .farmer-row .fw{text-align:right; white-space:nowrap}
+  .farmer-row .fw b{font-size:15px; color:var(--blue-700)}
+  .farmer-row .fw small{display:block; color:var(--muted); font-size:11px}
+  .sel-summary{background:var(--blue-50); border:1.5px dashed var(--blue-300); border-radius:12px; padding:14px}
+  .sel-summary .row{display:flex; justify-content:space-between; padding:4px 0; font-size:13.5px}
+  .sel-summary .row b{font-variant-numeric:tabular-nums}
+  /* ---------- Lot cards ---------- */
+  .lots-grid{display:grid; gap:14px; grid-template-columns:repeat(auto-fill,minmax(320px,1fr)); margin-top:14px}
+  .lot{background:#fff; border:1px solid var(--line); border-radius:var(--radius); box-shadow:var(--shadow); padding:16px; position:relative}
+  .lot .head{display:flex; align-items:center; gap:8px; margin-bottom:10px; flex-wrap:wrap}
+  .lot .lotid{font-weight:800; font-size:15px; color:var(--blue-700); letter-spacing:.3px}
+  .lot .country{color:var(--muted); font-size:13px; margin:2px 0 8px}
+  .lot .kv{display:grid; grid-template-columns:1fr 1fr; gap:7px 12px; font-size:13px; margin:8px 0}
+  .lot .kv div{background:var(--blue-50); border-radius:9px; padding:7px 10px}
+  .lot .kv span{display:block; font-size:10.5px; color:var(--muted); font-weight:600}
+  .lot .kv b{font-variant-numeric:tabular-nums}
+  .lot .farmers{font-size:12.5px; color:var(--muted); margin:6px 0 10px; line-height:1.7}
+  .seg{display:flex; background:var(--blue-50); border:1px solid var(--line); border-radius:10px; padding:3px; gap:3px}
+  .seg button{flex:1; border:none; background:transparent; padding:7px 4px; border-radius:8px; cursor:pointer;
+    font-size:12px; font-weight:700; color:var(--muted); transition:.15s; white-space:nowrap}
+  .seg button.on-wait{background:var(--amber-bg); color:var(--amber)}
+  .seg button.on-ready{background:var(--blue-600); color:#fff}
+  .seg button.on-exported{background:var(--green); color:#fff}
+  .lot .foot{display:flex; gap:8px; margin-top:10px; align-items:center; flex-wrap:wrap}
+  .lot input[type=date]{max-width:170px; font-size:13px; padding:7px 9px}
+  .lot .merge-src{font-size:11px; color:#8AA2B5}
+  /* ---------- Bottom nav (mobile) ---------- */
+  .bottombar{display:none; position:fixed; bottom:0; left:0; right:0; z-index:60; background:rgba(255,255,255,.96);
+    backdrop-filter:blur(10px); border-top:1px solid var(--line); padding:6px 8px calc(6px + env(safe-area-inset-bottom));
+    grid-template-columns:repeat(6,1fr); gap:2px}
+  .bottombar button{border:none; background:transparent; border-radius:12px; padding:7px 2px; cursor:pointer;
+    display:flex; flex-direction:column; align-items:center; gap:2px; font-size:10.5px; font-weight:700; color:var(--muted)}
+  .bottombar button .bi{font-size:19px; line-height:1}
+  .bottombar button.active{color:var(--blue-600); background:var(--blue-100)}
+  @media(max-width:760px){
+    .tabs{display:none}
+    .bottombar{display:grid}
+    .wrap{padding-bottom:110px}
+    .brand h1{font-size:14px}
+    .brand small{display:none}
+    .topbar{gap:8px}
+  }
+  /* ---------- Filter bar & farmer cards ---------- */
+  .filterbar{display:grid; grid-template-columns:2fr 1.3fr 1fr 1fr auto; gap:8px; margin:16px 0 2px; align-items:center}
+  @media(max-width:760px){.filterbar{grid-template-columns:1fr 1fr}.filterbar .f-q{grid-column:1/-1}}
+  .farmer-card .fc-head{display:flex; align-items:center; gap:10px; margin-bottom:8px}
+  .farmer-card .fc-ava{width:42px; height:42px; border-radius:12px; flex:0 0 auto;
+    background:linear-gradient(135deg,#64B5F6,var(--blue-700)); display:grid; place-items:center; color:#fff; font-weight:800; font-size:15px}
+  .farmer-card .fc-code{font-weight:800; font-size:15px; color:var(--blue-700)}
+  .farmer-card .fc-sub{font-size:12px; color:var(--muted)}
+  .farmer-card .fc-contact{font-size:13px; margin:2px 0 10px; line-height:1.7; color:var(--ink)}
+  .hist-row{display:flex; justify-content:space-between; gap:10px; padding:9px 2px; border-bottom:1px solid #ECF4FB; font-size:13.5px; flex-wrap:wrap}
+  .hist-row:last-child{border-bottom:none}
+  /* ---------- Print ---------- */
+  #printArea{display:none}
+  @media print{
+    @page{size:A4; margin:14mm}
+    body{background:#fff}
+    body > *:not(#printArea){display:none !important}
+    #printArea{display:block; font-family:'Noto Sans Thai','Sarabun',sans-serif; color:#000}
+    .p-head{display:flex; justify-content:space-between; align-items:flex-end; border-bottom:3px solid #1565C0; padding-bottom:8px; margin-bottom:14px}
+    .p-head .co{font-size:20px; font-weight:800; color:#1565C0; line-height:1.3}
+    .p-head .co small{display:block; font-size:11px; color:#555; font-weight:400}
+    .p-head .doc{font-size:11.5px; color:#333; text-align:right; line-height:1.5}
+    .p-doc-title{font-size:17px; font-weight:800; margin:12px 0 2px}
+    .p-meta{font-size:13px; margin-bottom:12px; line-height:1.7}
+    .p-table{width:100%; border-collapse:collapse; font-size:12.5px; margin-bottom:14px}
+    .p-table th,.p-table td{border:1px solid #555; padding:6px 8px; text-align:left}
+    .p-table th{background:#E3F2FD}
+    .p-table .num{text-align:right}
+    .p-table .nw{white-space:nowrap}
+    .p-table.compact{font-size:10px}
+    .p-table.compact th,.p-table.compact td{padding:3px 4px}
+    .p-tot td{font-weight:800; background:#F2F8FF}
+    .p-sign{display:flex; gap:40px; margin-top:48px; font-size:13px}
+    .p-sign div{flex:1; text-align:center}
+    .p-sign .line{border-top:1px solid #000; padding-top:6px}
+    .p-labels{display:grid; grid-template-columns:1fr 1fr; gap:12px}
+    .p-label{border:2.5px solid #1565C0; border-radius:12px; padding:14px; page-break-inside:avoid}
+    .p-label .lt{font-size:16px; font-weight:800; color:#1565C0; margin-bottom:2px; word-break:break-all}
+    .p-label .ls{font-size:11px; color:#555; margin-bottom:8px; padding-bottom:6px; border-bottom:1px dashed #999}
+    .p-label table{width:100%; font-size:12px; border-collapse:collapse}
+    .p-label td{padding:2.5px 0; vertical-align:top}
+    .p-label td:first-child{color:#555; width:46%}
+    .p-note{font-size:10.5px; color:#666; margin-top:12px}
+  }
+  /* ---------- Modal & toast ---------- */
+  .overlay{position:fixed; inset:0; z-index:100; background:rgba(15,40,70,.45); backdrop-filter:blur(3px);
+    display:none; align-items:center; justify-content:center; padding:16px}
+  .overlay.show{display:flex}
+  .modal{background:#fff; border-radius:18px; box-shadow:0 20px 60px rgba(10,35,60,.3); width:100%; max-width:440px;
+    padding:22px; animation:pop .2s ease; max-height:88vh; overflow:auto}
+  @keyframes pop{from{opacity:0; transform:scale(.94)} to{opacity:1}}
+  .modal h3{font-size:17px; margin-bottom:4px; display:flex; align-items:center; gap:8px}
+  .modal .msub{color:var(--muted); font-size:13px; margin-bottom:14px}
+  .link-box{display:flex; gap:8px; margin:10px 0}
+  .link-box input{flex:1; background:var(--blue-50); font-size:12.5px; color:var(--blue-700)}
+  .modal .row2{display:grid; grid-template-columns:1fr 1fr; gap:10px}
+  .toasts{position:fixed; bottom:76px; left:50%; transform:translateX(-50%); z-index:200; display:flex; flex-direction:column; gap:8px; width:min(92vw,420px); pointer-events:none}
+  .toast{background:#123A5C; color:#fff; border-radius:12px; padding:11px 16px; font-size:13.5px; box-shadow:0 8px 24px rgba(10,35,60,.35);
+    display:flex; gap:9px; align-items:center; animation:tin .25s ease}
+  .toast.ok{background:#0E7A38} .toast.warn{background:#9A5B07} .toast.err{background:#B91C1C}
+  @keyframes tin{from{opacity:0; transform:translateY(10px)} to{opacity:1}}
+  .section-title{display:flex; align-items:center; justify-content:space-between; gap:10px; margin:22px 0 10px; flex-wrap:wrap}
+  .section-title h3{font-size:15.5px}
+  .muted{color:var(--muted); font-size:12.5px}
+  .spin{display:inline-block; width:13px; height:13px; border:2px solid rgba(255,255,255,.4); border-top-color:#fff; border-radius:50%; animation:spin .8s linear infinite}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  /* ---------- Auth (ไอดีใครไอดีมัน — สมัครฟรี) ---------- */
+  #authScreen{position:fixed; inset:0; z-index:400; background:linear-gradient(160deg,#E8F3FF,#F6FAFE 65%);
+    display:none; align-items:center; justify-content:center; padding:20px; overflow:auto}
+  #authScreen.show{display:flex}
+  .auth-card{width:100%; max-width:400px; background:#fff; border-radius:20px;
+    box-shadow:0 20px 60px rgba(10,35,60,.18); padding:26px 24px; animation:pop .25s ease}
+  .auth-logo{width:60px; height:60px; border-radius:18px; margin:0 auto 12px; color:#fff; font-size:30px;
+    background:linear-gradient(135deg,var(--blue-500),var(--blue-700)); display:grid; place-items:center;
+    box-shadow:0 6px 16px rgba(25,118,210,.4)}
+  .auth-card h2{text-align:center; font-size:19px; margin-bottom:2px}
+  .auth-card .co-sub{text-align:center; color:var(--muted); font-size:12.5px; margin-bottom:16px}
+  .auth-tabs{display:flex; background:var(--blue-100); padding:4px; border-radius:12px; margin-bottom:16px}
+  .auth-tabs button{flex:1; border:none; background:transparent; padding:9px; border-radius:9px;
+    font-weight:600; color:var(--blue-700); cursor:pointer; font-size:14px; font-family:inherit}
+  .auth-tabs button.active{background:#fff; box-shadow:0 2px 6px rgba(20,50,80,.12)}
+  .auth-card .field{margin-bottom:12px}
+  .auth-card .btn.primary{width:100%}
+  .auth-msg{font-size:12.5px; padding:8px 11px; border-radius:9px; margin-bottom:10px; display:none; line-height:1.5}
+  .auth-msg.err{background:var(--red-bg); color:var(--red)}
+  .auth-msg.ok{background:var(--green-bg); color:var(--green)}
+  .auth-foot{text-align:center; font-size:11.5px; color:var(--muted); margin-top:14px; line-height:1.7}
+  .user-chip{display:inline-flex; align-items:center; gap:7px; padding:5px 11px; border-radius:999px;
+    background:var(--blue-100); color:var(--blue-700); font-size:12.5px; font-weight:700; max-width:170px}
+  .user-chip .av{width:22px; height:22px; border-radius:50%; flex:0 0 auto; color:#fff; font-size:12px; display:grid; place-items:center;
+    background:linear-gradient(135deg,var(--blue-500),var(--blue-700))}
+  .user-chip span{overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
+  .user-chip.admin{background:#FFF3D6; color:#8A5A00}
+  .user-chip .crown{flex:0 0 auto}
+  /* ---------- จัดการผู้ใช้ / อนุมัติสมาชิก (แอดมิน) ---------- */
+  .u-row{display:flex; align-items:center; justify-content:space-between; gap:10px; padding:10px 12px;
+    border:1.5px solid #DDE8F3; border-radius:12px; margin-bottom:8px; flex-wrap:wrap}
+  .u-row.pending{border-color:#F2DCA6; background:#FFFDF3}
+  .u-row.rejected{opacity:.65}
+  .u-main{min-width:0}
+  .u-main b{font-size:14px}
+  .u-main .muted{display:block; margin-top:2px}
+  .u-actions{display:flex; gap:6px; flex-wrap:wrap}
+  .u-actions .btn{padding:5px 10px; font-size:12px}
+  .badge{display:inline-block; font-size:10.5px; font-weight:700; padding:2px 7px; border-radius:999px; vertical-align:middle}
+  .badge.admin{background:#FFF0C9; color:#8A5A00}
+  .badge.pending{background:#FFE9C7; color:#9A5B07}
+  .badge.rejected{background:var(--red-bg); color:var(--red)}
+  .badge.approved{background:var(--green-bg); color:var(--green)}
+</style>
+</head>
+<body>
+
+<!-- ===== Login / สมัครสมาชิก (ไอดีใครไอดีมัน • ฟรี) ===== -->
+<div id="authScreen" class="show">
+  <div class="auth-card">
+    <div class="auth-logo">🌱</div>
+    <h2>บริษัท มิ่งการเกษตร</h2>
+    <div class="co-sub">ระบบจัดการข้อมูลเมล็ดพันธุ์</div>
+    <div class="auth-tabs">
+      <button id="tabLogin" class="active" type="button">เข้าสู่ระบบ</button>
+      <button id="tabReg" type="button">สมัครสมาชิก</button>
+    </div>
+    <div id="authMsg" class="auth-msg"></div>
+    <form id="formLogin">
+      <div class="field"><label>ชื่อผู้ใช้</label>
+        <input id="lgUser" autocomplete="username" placeholder="ชื่อผู้ใช้"></div>
+      <div class="field"><label>รหัสผ่าน</label>
+        <input id="lgPass" type="password" autocomplete="current-password" placeholder="รหัสผ่าน"></div>
+      <button class="btn primary" id="btnLogin" type="submit">เข้าสู่ระบบ</button>
+    </form>
+    <form id="formReg" style="display:none">
+      <div class="field"><label>ชื่อผู้ใช้ (อักษรอังกฤษ/ตัวเลข 3–20 ตัว)</label>
+        <input id="rgUser" autocomplete="username" placeholder="เช่น somchai"></div>
+      <div class="field"><label>รหัสผ่าน (อย่างน้อย 4 ตัว)</label>
+        <input id="rgPass" type="password" autocomplete="new-password" placeholder="รหัสผ่าน"></div>
+      <div class="field"><label>ยืนยันรหัสผ่าน</label>
+        <input id="rgPass2" type="password" autocomplete="new-password" placeholder="พิมพ์รหัสผ่านอีกครั้ง"></div>
+      <button class="btn primary" id="btnReg" type="submit">สมัครฟรี &amp; เข้าใช้งาน</button>
+    </form>
+    <div class="auth-foot">🔒 สมัครฟรี ไม่มีค่าใช้จ่าย • ไอดีใครไอดีมัน<br>ผู้สมัคร <b>คนแรกของระบบเป็นแอดมิน</b> อัตโนมัติ<br>คนถัดไปต้องรอแอดมินอนุมัติก่อนเข้าใช้งาน<br>ข้อมูลทีมยังซิงก์ร่วมกันหลังเข้าสู่ระบบ</div>
+  </div>
+</div>
+
+<header class="topbar">
+  <div class="brand">
+    <div class="logo">🌱</div>
+    <h1>มิ่งการเกษตร<small>ระบบจัดการข้อมูลเมล็ดพันธุ์</small></h1>
+  </div>
+  <div class="spacer"></div>
+  <div class="top-tools">
+    <span id="syncPill" class="pill busy"><span class="dot"></span><span id="syncText">กำลังเชื่อมต่อ…</span></span>
+    <div class="season-wrap">
+      <select id="seasonFilter" title="เลือกฤดูกาล"></select>
+      <button class="btn soft sm" id="btnAddSeason" title="เพิ่มฤดูกาลใหม่">＋ ฤดูกาล</button>
+    </div>
+    <span id="userChip" class="user-chip" title="บัญชีที่เข้าสู่ระบบ"><span class="av">👤</span><span id="userChipName">—</span></span>
+    <button class="btn soft sm" id="btnUsers" style="display:none" title="อนุมัติสมาชิก / กำหนดสิทธิ์">👑 ผู้ใช้</button>
+    <button class="btn primary sm" id="btnShare">🔗 แชร์</button>
+    <button class="btn ghost sm" id="btnLogout" title="ออกจากระบบ">ออก</button>
+  </div>
+</header>
+
+<nav class="tabs" id="tabs">
+  <button data-page="dash" class="active">📊 แดชบอร์ด</button>
+  <button data-page="intake">📥 รับเข้าเมล็ดพันธุ์</button>
+  <button data-page="merge">🔀 รวมล็อต</button>
+  <button data-page="lots">📦 ล็อต &amp; ส่งออก</button>
+  <button data-page="ship">🚢 ชุดส่งออก</button>
+  <button data-page="farmers">👨‍🌾 เกษตรกร</button>
+</nav>
+
+<main class="wrap">
+
+  <!-- ================= DASHBOARD ================= -->
+  <section class="page active" id="page-dash">
+    <div class="stats">
+      <div class="stat"><div class="t">📥 น้ำหนักรับเข้าทั้งหมด</div><div class="v"><span id="stIntake">0</span><span class="u">กก.</span></div><div class="d" id="stIntakeD"></div></div>
+      <div class="stat g"><div class="t">🚢 น้ำหนักส่งออกแล้ว</div><div class="v"><span id="stExport">0</span><span class="u">กก.</span></div><div class="d" id="stExportD"></div></div>
+      <div class="stat o"><div class="t">📦 น้ำหนักคงเหลือ</div><div class="v"><span id="stRemain">0</span><span class="u">กก.</span></div><div class="d">รับเข้า − ส่งออกแล้ว</div></div>
+    </div>
+    <div class="card">
+      <h2><span class="ic">📌</span>ภาพรวมฤดูกาล<span id="dashSeasonLbl" class="muted"></span></h2>
+      <div class="chips" id="dashChips"></div>
+      <div class="section-title"><h3>แยกตามชนิดพืช</h3></div>
+      <div class="table-wrap"><table id="tblCrop">
+        <thead><tr><th>ชนิดพืช</th><th>รับเข้า (กก.)</th><th>รวมล็อตแล้ว (กก.)</th><th>ส่งออกแล้ว (กก.)</th><th>จำนวนล็อต</th></tr></thead>
+        <tbody></tbody>
+      </table></div>
+    </div>
+  </section>
+
+  <!-- ================= INTAKE ================= -->
+  <section class="page" id="page-intake">
+    <div class="card">
+      <h2><span class="ic">📥</span>บันทึกน้ำหนักรับเข้าเมล็ดพันธุ์</h2>
+      <div class="sub">กรอกข้อมูลแยกตามรหัสเกษตรกร — บันทึกแล้วจะซิงก์ขึ้นคลาวด์ทันที</div>
+      <form id="formIntake" autocomplete="off">
+        <div class="grid">
+          <div class="field"><label>รหัส / ชื่อเกษตรกร <b>*</b></label><input id="fFarmer" list="farmerList" placeholder="เช่น กฟ-101" required><datalist id="farmerList"></datalist></div>
+          <div class="field"><label>ชนิดพืช <b>*</b></label><select id="fCrop"></select></div>
+          <div class="field" id="fCropOtherWrap" style="display:none"><label>ระบุชนิดพืช <b>*</b></label><input id="fCropOther" placeholder="พิมพ์ชื่อพืช"></div>
+          <div class="field"><label>ชนิดสายพันธุ์ <b>*</b></label><input id="fVariety" list="varietyList"><datalist id="varietyList"></datalist></div>
+          <div class="field"><label>ฤดูกาล <b>*</b></label><select id="fSeason"></select></div>
+          <div class="field"><label>น้ำหนักรับเข้า (กก.) <b>*</b></label><input id="fWeight" type="number" min="0.01" step="0.01" placeholder="0.00" required></div>
+          <div class="field"><label>ความชื้น (%) <b>*</b></label><input id="fMoist" type="number" min="0" max="100" step="0.1" placeholder="0–100" required></div>
+          <div class="field"><label>ความแข็งแรง (%) <b>*</b></label><input id="fVigor" type="number" min="0" max="100" step="0.1" placeholder="0–100" required></div>
+          <div class="field"><label>ความงอก (%) <b>*</b></label><input id="fGerm" type="number" min="0" max="100" step="0.1" placeholder="0–100" required></div>
+          <div class="field"><label>ความบริสุทธิ์ (%) <b>*</b></label><input id="fPurity" type="number" min="0" max="100" step="0.1" placeholder="0–100" required></div>
+          <div class="field"><label>จำนวน 1,000 เมล็ด (กรัม)</label><input id="fSeed1000" type="number" min="0" step="0.01" placeholder="ไม่บังคับ"><div class="hint">Optional — ใส่หรือไม่ใส่ก็ได้</div></div>
+          <div class="field notes-field" style="grid-column:1/-1"><label>ข้อเสนอแนะ</label><textarea id="fNotes" rows="2" placeholder="เช่น เมล็ดบางส่วนชำรุด, ขนส่งล่าช้า ฯลฯ (ใส่หรือไม่ใส่ก็ได้)"></textarea></div>
+        </div>
+        <div class="form-foot">
+          <button type="submit" class="btn primary" id="btnSaveIntake">💾 บันทึกรับเข้า</button>
+          <button type="button" class="btn ghost" id="btnCsvIntake">⬇️ ส่งออก CSV</button>
+          <button type="button" class="btn ghost" id="btnPrintIntake">🖨 พิมพ์ตาราง</button>
+          <span class="muted" id="intakeCountLbl"></span>
+        </div>
+      </form>
+      <div class="filterbar">
+        <input id="fiQ" class="f-q" placeholder="🔍 ค้นหารหัสเกษตรกร / ชนิดพืช">
+        <select id="fiFarmer"><option value="">เกษตรกรทั้งหมด</option></select>
+        <input id="fiFrom" type="date" title="ตั้งแต่วันที่">
+        <input id="fiTo" type="date" title="ถึงวันที่">
+        <button class="btn ghost sm" id="fiClear" type="button">ล้างตัวกรอง</button>
+      </div>
+      <div class="table-wrap"><table id="tblIntake">
+        <thead><tr><th>วันที่</th><th>ชนิดพืช</th><th>สายพันธุ์</th><th>รหัสเกษตรกร</th><th>น้ำหนัก (กก.)</th><th>ชื้น %</th><th>แข็งแรง %</th><th>งอก %</th><th>บริสุทธิ์ %</th><th>1,000 เมล็ด</th><th>ข้อเสนอแนะ</th><th>สถานะ</th><th></th></tr></thead>
+        <tbody></tbody>
+      </table></div>
+    </div>
+  </section>
+
+  <!-- ================= FARMERS ================= -->
+  <section class="page" id="page-farmers">
+    <div class="card">
+      <h2><span class="ic">👨‍🌾</span>รายชื่อเกษตรกร</h2>
+      <div class="sub">โปรไฟล์เกษตรกร ข้อมูลติดต่อ และประวัติส่งมอบเมล็ดพันธุ์ทุกฤดูกาล — เกษตรกรจะถูกเพิ่มอัตโนมัติเมื่อบันทึกรับเข้า</div>
+      <div class="filterbar" style="grid-template-columns:2fr auto">
+        <input id="fqQ" placeholder="🔍 ค้นหารหัส / โทรศัพท์ / ที่อยู่">
+        <button class="btn primary" id="btnAddFarmer" type="button">＋ เพิ่มเกษตรกร</button>
+      </div>
+      <div class="lots-grid" id="farmerCards"></div>
+      <div class="empty" id="farmersEmpty" style="display:none"><div class="big">👨‍🌾</div>ยังไม่มีรายชื่อเกษตรกร — กด "＋ เพิ่มเกษตรกร" หรือบันทึกรับเข้า ระบบจะเพิ่มให้อัตโนมัติ</div>
+      <div class="section-title" style="margin-top:26px"><h3>📊 รายงาน: เกษตรกรแต่ละคนส่งออกไปประเทศไหนบ้าง</h3><span class="muted" id="repSeasonLbl"></span><button class="btn ghost sm" id="btnPrintReport" type="button">🖨 พิมพ์รายงาน</button></div>
+      <div class="table-wrap"><table id="tblReport">
+        <thead><tr><th>รหัสเกษตรกร</th><th>ประเทศปลายทาง (น้ำหนักส่งออก)</th><th>รวมส่งออก (กก.)</th></tr></thead>
+        <tbody></tbody>
+      </table></div>
+    </div>
+  </section>
+
+  <!-- ================= MERGE ================= -->
+  <section class="page" id="page-merge">
+    <div class="merge-grid">
+      <div class="card">
+        <h2><span class="ic">🔀</span>เลือกเกษตรกรเพื่อรวมล็อต</h2>
+        <div class="sub">ติ๊กเลือกรหัสเกษตรกรหลายคน (ชนิดพืชเดียวกัน) ระบบจะคำนวณค่าเฉลี่ยและสร้างเบอร์ล็อตใหม่ให้อัตโนมัติ</div>
+        <div id="mergeList"></div>
+      </div>
+      <div class="card">
+        <h2><span class="ic">🧮</span>สรุปการรวมล็อต</h2>
+        <div class="sub">ค่าเฉลี่ยจะคำนวณจากเกษตรกรที่เลือก</div>
+        <div class="sel-summary">
+          <div class="row"><span>จำนวนเกษตรกรที่เลือก</span><b id="msFarmers">0</b></div>
+          <div class="row"><span>ชนิดพืช</span><b id="msCrop">—</b></div>
+          <div class="row"><span>สายพันธุ์</span><b id="msVariety">—</b></div>
+          <div class="row"><span>น้ำหนักรวม</span><b id="msWeight">0 กก.</b></div>
+          <div class="row"><span>ความงอกเฉลี่ย</span><b id="msGerm">—</b></div>
+          <div class="row"><span>ความชื้นเฉลี่ย</span><b id="msMoist">—</b></div>
+          <div class="row"><span>ความบริสุทธิ์เฉลี่ย</span><b id="msPurity">—</b></div>
+          <div class="row"><span>ความแข็งแรงเฉลี่ย</span><b id="msVigor">—</b></div>
+          <div class="row"><span>1,000 เมล็ดเฉลี่ย</span><b id="msSeed">—</b></div>
+        </div>
+        <div class="field" style="margin-top:14px"><label>ตั้งชื่อเบอร์ล็อตใหม่ (ถ้าเว้นว่าง ระบบสร้างรหัสให้อัตโนมัติ)</label><input id="msLotName" list="lotNameList" placeholder="เช่น ข้าวโพดรวมญี่ปุ่น 2569/1"></div>
+        <datalist id="lotNameList"></datalist>
+        <div class="field" style="margin-top:14px"><label>ประเทศปลายทางที่จัดส่ง <b>*</b></label><input id="msCountry" list="countryList" placeholder="เช่น ญี่ปุ่น, เนเธอร์แลนด์"></div>
+        <div class="form-foot" style="flex-direction:column; align-items:stretch">
+          <button class="btn primary" id="btnCreateLot" disabled>📦 สร้างเบอร์ล็อตใหม่</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= SHIPMENTS ================= -->
+  <section class="page" id="page-ship">
+    <div class="merge-grid">
+      <div class="card">
+        <h2><span class="ic">🚢</span>จัดชุดส่งออก (Export Shipment)</h2>
+        <div class="sub">เลือกเบอร์ล็อตที่รวมแล้วหลาย ๆ ล็อตมาจัดรวมกันเป็น "ชุดส่งออก" เดียว — ล็อตที่ถูกจัดจะเปลี่ยนสถานะเป็น "ส่งออกแล้ว" อัตโนมัติ</div>
+        <div id="shipLotList"></div>
+      </div>
+      <div class="card">
+        <h2><span class="ic">🧾</span>ข้อมูลชุดส่งออก</h2>
+        <div class="sub">ระบุเลขที่ใบแจ้งหนี้และประเทศปลายทางของชุดนี้</div>
+        <div class="sel-summary">
+          <div class="row"><span>จำนวนล็อตที่เลือก</span><b id="spCount">0</b></div>
+          <div class="row"><span>น้ำหนักรวม</span><b id="spWeight">0 กก.</b></div>
+          <div class="row"><span>ชนิดพืช</span><b id="spCrops">—</b></div>
+          <div class="row"><span>ความงอกเฉลี่ยรวม</span><b id="spGerm">—</b></div>
+          <div class="row"><span>ความชื้นเฉลี่ยรวม</span><b id="spMoist">—</b></div>
+          <div class="row"><span>ความแข็งแรงเฉลี่ยรวม</span><b id="spVigor">—</b></div>
+        </div>
+        <div class="field" style="margin-top:14px"><label>เลขที่ใบแจ้งหนี้ (INV. No.) <b>*</b></label><input id="spInv" placeholder="INV-0001"></div>
+        <div class="row2" style="margin-top:10px">
+          <div class="field"><label>ประเทศปลายทางที่จัดส่ง <b>*</b></label><input id="spCountry" list="countryList" placeholder="เช่น ญี่ปุ่น"></div>
+          <div class="field"><label>วันที่จัดส่ง</label><input id="spDate" type="date"></div>
+        </div>
+        <datalist id="countryList"></datalist>
+        <div class="form-foot"><button class="btn primary" id="btnCreateShip" disabled>🚢 สร้างชุดส่งออก</button></div>
+      </div>
+    </div>
+    <div class="card">
+      <h2><span class="ic">📦</span>ชุดส่งออกทั้งหมด</h2>
+      <div class="sub">ทุกชุดพร้อมเลข INV — กด "ยุบชุดส่งออก" เพื่อคืนล็อตกลับสถานะเดิมได้</div>
+      <div class="lots-grid" id="shipGrid"></div>
+      <div class="empty" id="shipEmpty" style="display:none"><div class="big">🚢</div>ยังไม่มีชุดส่งออก — เลือกล็อตด้านบนแล้วกด "สร้างชุดส่งออก"</div>
+    </div>
+  </section>
+
+  <!-- ================= LOTS ================= -->
+  <section class="page" id="page-lots">
+    <div class="card">
+      <h2><span class="ic">📦</span>ติดตามสถานะล็อตเมล็ดพันธุ์</h2>
+      <div class="sub">รอแพ็ค → พร้อมส่งออก → ส่งออกแล้ว (เมื่อเลือก "ส่งออกแล้ว" ต้องระบุวันที่ส่งออก)</div>
+      <div class="lots-grid" id="lotsGrid"></div>
+      <div class="empty" id="lotsEmpty" style="display:none"><div class="big">📦</div>ยังไม่มีล็อตในฤดูกาลนี้ — ไปที่แท็บ "รวมล็อต" เพื่อสร้างล็อตแรกของคุณ</div>
+    </div>
+  </section>
+</main>
+
+<nav class="bottombar" id="bottombar">
+  <button data-page="dash" class="active"><span class="bi">📊</span>แดชบอร์ด</button>
+  <button data-page="intake"><span class="bi">📥</span>รับเข้า</button>
+  <button data-page="merge"><span class="bi">🔀</span>รวมล็อต</button>
+  <button data-page="lots"><span class="bi">📦</span>ล็อต</button>
+  <button data-page="ship"><span class="bi">🚢</span>จัดส่ง</button>
+  <button data-page="farmers"><span class="bi">👨‍🌾</span>เกษตรกร</button>
+</nav>
+
+<!-- Share modal -->
+<div class="overlay" id="ovShare">
+  <div class="modal">
+    <h3>🔗 แชร์ห้องทำงานนี้</h3>
+    <div class="msub">ส่งลิงก์นี้ให้เพื่อนร่วมทีม — ทุกคนจะเห็นข้อมูลชุดเดียวกันแบบเรียลไทม์ (ดู + กรอกได้)</div>
+    <div id="shareLocalWarn" style="display:none; background:var(--amber-bg); border:1.5px solid #F2DCA6; color:var(--amber); border-radius:12px; padding:10px 14px; font-size:13px; margin-bottom:10px; line-height:1.65">
+      ⚠️ <b>ลิงก์นี้ยังเปิดได้เฉพาะเครื่องนี้</b> เพราะแอปยังรันจากไฟล์ในเครื่อง — วิธีให้เปิดได้ทุกอุปกรณ์: อัปโหลดไฟล์ <b>index.html</b> ขึ้นโฮสติ้งฟรี เช่น <b>netlify.com/drop</b> (ลากไฟล์วาง ได้ลิงก์ https ทันที) หรือ GitHub Pages แล้วนำลิงก์ https ที่ได้ + <b>?room=main</b> ส่งให้ทีม — ข้อมูลจะซิงก์กันอัตโนมัติเพราะเก็บบนคลาวด์อยู่แล้ว
+    </div>
+    <div class="field"><label>ลิงก์สำหรับแชร์</label>
+      <div class="link-box"><input id="shareLink" readonly><button class="btn primary sm" id="btnCopy">คัดลอก</button></div>
+    </div>
+    <div class="row2">
+      <div class="field"><label>ห้องปัจจุบัน</label><input id="roomLbl" readonly></div>
+      <div class="field"><label>บัญชีผู้ใช้ (แสดงในข้อมูล)</label><input id="userName" readonly></div>
+    </div>
+    <div class="field" style="margin-top:10px"><label>🔥 Firebase URL (ไม่บังคับ — ถ้ามี Firebase Realtime Database ของ Google)</label>
+      <div class="link-box"><input id="fbUrl" placeholder="https://โปรเจกต์คุณ-default-rtdb.asia-southeast1.firebasedatabase.app"><button class="btn soft sm" id="btnFbSave" type="button">เชื่อมต่อ</button></div>
+      <div class="hint">เมื่อใส่ URL แล้ว ข้อมูลจะถูกเซฟซ้ำไปยัง Firebase แบบเรียลไทม์ด้วย (ใช้ textdb.dev ไปพร้อมกันได้) — เว้นว่าง = ใช้คลาวด์ปกติ</div>
+    </div>
+    <div class="form-foot">
+      <button class="btn ghost" id="btnNewRoom">✨ สร้างห้องใหม่ (แยกข้อมูล)</button>
+      <span class="spacer"></span>
+      <button class="btn primary" id="btnCloseShare">เสร็จสิ้น</button>
+    </div>
+  </div>
+</div>
+
+<!-- Users / อนุมัติสมาชิก modal (เฉพาะแอดมิน) -->
+<div class="overlay" id="ovUsers">
+  <div class="modal">
+    <h3>👑 จัดการผู้ใช้ &amp; อนุมัติสมาชิก</h3>
+    <div class="msub">อนุมัติคนที่สมัครเข้ามา หรือกำหนดสิทธิ์แอดมิน — เห็นเฉพาะบัญชีแอดมิน</div>
+    <div id="usersList"></div>
+    <div class="form-foot">
+      <button class="btn soft" id="btnUsersRefresh" type="button">↻ รีเฟรช</button>
+      <span class="spacer"></span>
+      <button class="btn primary" id="btnCloseUsers" type="button">เสร็จสิ้น</button>
+    </div>
+  </div>
+</div>
+
+<!-- Add season modal -->
+<div class="overlay" id="ovSeason">
+  <div class="modal">
+    <h3>🌾 เพิ่มฤดูกาลใหม่</h3>
+    <div class="msub">ตั้งชื่อฤดูกาลแยกเป็นปี ๆ เช่น 2569/1 (ปี/รอบปี)</div>
+    <div class="row2">
+      <div class="field"><label>ปี (พ.ศ.) <b>*</b></label><input id="sYear" type="number" min="2500" max="2700"></div>
+      <div class="field"><label>รอบที่</label><select id="sSeg"><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option></select></div>
+    </div>
+    <div class="field" style="margin-top:10px"><label>หรือระบุชื่อเอง</label><input id="sCustom" placeholder="เช่น 2569/2 หนาว  (เว้นว่างได้)"></div>
+    <div class="form-foot">
+      <button class="btn primary" id="btnConfirmSeason">＋ เพิ่มฤดูกาล</button>
+      <span class="spacer"></span>
+      <button class="btn ghost" id="btnCancelSeason">ยกเลิก</button>
+    </div>
+  </div>
+</div>
+
+<!-- Edit intake modal -->
+<div class="overlay" id="ovEdit">
+  <div class="modal">
+    <h3>✏️ แก้ไขรายการรับเข้า</h3>
+    <div class="msub" id="edMeta"></div>
+    <div class="row2">
+      <div class="field"><label>รหัส / ชื่อเกษตรกร <b>*</b></label><input id="edFarmer" list="farmerList"></div>
+      <div class="field"><label>ชนิดพืช <b>*</b></label><input id="edCrop"></div>
+    </div>
+    <div class="row2" style="margin-top:10px">
+      <div class="field"><label>ชนิดสายพันธุ์ <b>*</b></label><input id="edVariety" list="varietyList"></div>
+    </div>
+    <div class="row2" style="margin-top:10px">
+      <div class="field"><label>น้ำหนักรับเข้า (กก.) <b>*</b></label><input id="edWeight" type="number" min="0.01" step="0.01"></div>
+      <div class="field"><label>1,000 เมล็ด (กรัม)</label><input id="edSeed" type="number" min="0" step="0.01" placeholder="ไม่บังคับ"></div>
+    </div>
+    <div class="row2" style="margin-top:10px">
+      <div class="field"><label>ความชื้น (%)</label><input id="edMoist" type="number" min="0" max="100" step="0.1"></div>
+      <div class="field"><label>ความแข็งแรง (%)</label><input id="edVigor" type="number" min="0" max="100" step="0.1"></div>
+    </div>
+    <div class="row2" style="margin-top:10px">
+      <div class="field"><label>ความงอก (%)</label><input id="edGerm" type="number" min="0" max="100" step="0.1"></div>
+      <div class="field"><label>ความบริสุทธิ์ (%)</label><input id="edPurity" type="number" min="0" max="100" step="0.1"></div>
+    </div>
+    <div class="field" style="margin-top:10px"><label>ข้อเสนอแนะ</label><textarea id="edNotes" rows="2" placeholder="ไม่มีก็ได้"></textarea></div>
+    <div class="row2" style="margin-top:10px">
+      <div class="field"><label>ฤดูกาล</label><select id="edSeason"></select></div>
+    </div>
+    <div class="form-foot">
+      <button class="btn primary" id="btnSaveEdit" type="button">💾 บันทึกการแก้ไข</button>
+      <span class="spacer"></span>
+      <button class="btn ghost" id="btnCancelEdit" type="button">ยกเลิก</button>
+    </div>
+  </div>
+</div>
+
+<!-- Farmer form modal -->
+<div class="overlay" id="ovFarmer">
+  <div class="modal">
+    <h3 id="farmerModalTitle">👨‍🌾 ข้อมูลเกษตรกร</h3>
+    <div class="msub">รหัสเกษตรกรเชื่อมกับรายการรับเข้า — เปลี่ยนชื่อแล้วประวัติทั้งหมดจะตามไปด้วย</div>
+    <div class="field"><label>รหัส / ชื่อเกษตรกร <b>*</b></label><input id="fCode" placeholder="เช่น กฟ-101"></div>
+    <div class="row2" style="margin-top:10px">
+      <div class="field"><label>เบอร์โทรศัพท์</label><input id="fPhone" placeholder="08x-xxx-xxxx"></div>
+      <div class="field"><label>แปลง / ตำบล</label><input id="fArea" placeholder="เช่น ต.หนองใหญ่"></div>
+    </div>
+    <div class="field" style="margin-top:10px"><label>ที่อยู่จัดส่ง / หมายเหตุ</label><input id="fAddress" placeholder="ที่อยู่หรือบันทึกเพิ่มเติม"></div>
+    <div class="form-foot">
+      <button class="btn primary" id="btnSaveFarmer" type="button">💾 บันทึก</button>
+      <span class="spacer"></span>
+      <button class="btn ghost" id="btnCancelFarmer" type="button">ยกเลิก</button>
+    </div>
+  </div>
+</div>
+
+<!-- Farmer history modal -->
+<div class="overlay" id="ovHist">
+  <div class="modal" style="max-width:580px">
+    <h3>📜 ประวัติ <span id="histName" style="color:var(--blue-700)"></span></h3>
+    <div class="msub" id="histSummary"></div>
+    <div id="histList"></div>
+    <div class="form-foot"><span class="spacer"></span><button class="btn primary" id="btnCloseHist" type="button">ปิด</button></div>
+  </div>
+</div>
+
+<!-- Print area (แสดงเฉพาะตอนพิมพ์) -->
+<div id="printArea">
+  <div class="p-head">
+    <div class="co">บริษัท มิ่งการเกษตร<small>ระบบจัดการข้อมูลเมล็ดพันธุ์ • Seed Management</small></div>
+    <div class="doc" id="pStamp"></div>
+  </div>
+  <div class="p-doc-title" id="pDocTitle"></div>
+  <div id="printBody"></div>
+</div>
+
+<div class="toasts" id="toasts"></div>
+
+<script>
+'use strict';
+/* ============================================================
+   ระบบจัดการเมล็ดพันธุ์ — บริษัท มิ่งการเกษตร
+   Cloud: textdb.dev (key-value JSON) + ntfy.sh (realtime push)
+   ============================================================ */
+
+const CROPS = ['ข้าวโพด','ข้าว','มันฝรั่ง','ถั่วเขียว','ถั่วดำ','ถั่วแระ','แครอท','คะน้า','ผักกาดขาว','อื่น ๆ'];
+const STATUS = { wait:{t:'รอแพ็ค', cls:'b-amber', seg:'on-wait'}, ready:{t:'พร้อมส่งออก', cls:'b-blue', seg:'on-ready'}, exported:{t:'ส่งออกแล้ว', cls:'b-green', seg:'on-exported'} };
+const DEFAULT_ROOM = 'main';
+
+const S = {
+  room: DEFAULT_ROOM,
+  db: { seasons:[], intake:[], lots:[], farmers:[], shipments:[], meta:{} },
+  name: '',
+  season: 'all',      // global season filter
+  page: 'dash',
+  mergeSel: new Set(),
+  shipSel: new Set(),
+  fIntake:{q:'',farmer:'',from:'',to:''},
+  editId:null,
+  farmerEditId:null,
+  dirty: false,
+  pushing: false,
+  lastSync: null,
+  es: null,
+  booted: false,
+  role: 'user',   // 'admin' | 'user'
+  status: 'approved',
+};
+
+/* ---------- helpers ---------- */
+const $ = s => document.querySelector(s);
+const $$ = s => Array.from(document.querySelectorAll(s));
+const esc = v => String(v==null?'':v).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const uid = p => p + '_' + Date.now().toString(36) + Math.random().toString(36).slice(2,7);
+const fmt = n => (Number(n)||0).toLocaleString('th-TH',{maximumFractionDigits:2});
+const pct = n => (n==null || isNaN(n)) ? '—' : fmt(n)+'%';
+const todayISO = () => new Date().toLocaleDateString('sv-SE');
+const thaiDate = iso => { if(!iso) return '—'; try{ return new Date(iso+'T00:00:00').toLocaleDateString('th-TH',{day:'numeric',month:'short',year:'numeric'}); }catch(e){ return iso; } };
+const timeStr = ts => new Date(ts).toLocaleDateString('th-TH',{day:'2-digit',month:'2-digit'}) + ' ' + new Date(ts).toLocaleTimeString('th-TH',{hour:'2-digit',minute:'2-digit'});
+
+function toast(msg, kind){
+  const t = document.createElement('div');
+  t.className = 'toast ' + (kind||'');
+  t.innerHTML = (kind==='ok'?'✅ ':kind==='err'?'⚠️ ':'ℹ️ ') + esc(msg);
+  $('#toasts').appendChild(t);
+  setTimeout(()=>{ t.style.opacity='0'; t.style.transition='.3s'; setTimeout(()=>t.remove(),320); }, 3400);
+}
+
+/* ---------- auth (ไอดีใครไอดีมัน — สมัครฟรี) ---------- */
+const USERS_URL = 'https://textdb.dev/api/data/peerfarmer-seed-users';
+const USERS_LS = 'pfseed_users';
+const SESSION_KEY = 'pfseed_session';
+
+/* SHA-256 แบบไม่พึ่ง crypto.subtle (ใช้ได้บน file:// ด้วย) */
+function sha256(ascii){
+  function rr(v,a){ return (v>>>a) | (v<<(32-a)); }
+  var mp = Math.pow, maxWord = mp(2,32), i, j, result = '';
+  var words = [], asciiBitLength = ascii.length*8;
+  var hash = sha256.h = sha256.h || [];
+  var k = sha256.k = sha256.k || [];
+  var primeCounter = k.length, isComposite = {};
+  for(var candidate=2; primeCounter<64; candidate++){
+    if(!isComposite[candidate]){
+      for(i=0; i<313; i+=candidate) isComposite[i] = candidate;
+      hash[primeCounter] = (mp(candidate,.5)*maxWord)|0;
+      k[primeCounter++] = (mp(candidate,1/3)*maxWord)|0;
+    }
+  }
+  ascii += '\x80';
+  while(ascii.length%64 - 56) ascii += '\x00';
+  for(i=0; i<ascii.length; i++){
+    j = ascii.charCodeAt(i);
+    if(j>>8) return '';
+    words[i>>2] |= j << ((3-i)%4)*8;
+  }
+  words[words.length] = ((asciiBitLength/maxWord)|0);
+  words[words.length] = (asciiBitLength);
+  for(j=0; j<words.length;){
+    var w = words.slice(j, j+=16), oldHash = hash;
+    hash = hash.slice(0,8);
+    for(i=0; i<64; i++){
+      var w15 = w[i-15], w2 = w[i-2];
+      var a = hash[0], e = hash[4];
+      var temp1 = hash[7]
+        + (rr(e,6)^rr(e,11)^rr(e,25))
+        + ((e&hash[5])^((~e)&hash[6]))
+        + k[i]
+        + (w[i] = (i<16) ? w[i] : (
+            w[i-16]
+            + (rr(w15,7)^rr(w15,18)^(w15>>>3))
+            + w[i-7]
+            + (rr(w2,17)^rr(w2,19)^(w2>>>10))
+          )|0
+        );
+      var temp2 = (rr(a,2)^rr(a,13)^rr(a,22))
+        + ((a&hash[1])^(a&hash[2])^(hash[1]&hash[2]));
+      hash = [(temp1+temp2)|0].concat(hash);
+      hash[4] = (hash[4]+temp1)|0;
+    }
+    for(i=0; i<8; i++) hash[i] = (hash[i]+oldHash[i])|0;
+  }
+  for(i=0; i<8; i++){
+    for(j=3; j+1; j--){
+      var b = (hash[i]>>(j*8))&255;
+      result += (b<16?'0':'') + b.toString(16);
+    }
+  }
+  return result;
+}
+function hashPass(username, pass){
+  return sha256(encodeURIComponent('mingseed::' + String(username).toLowerCase() + '::' + pass));
+}
+
+function localUsers(){ try{ const a = JSON.parse(localStorage.getItem(USERS_LS)||'[]'); return Array.isArray(a)?a:[]; }catch(e){ return []; } }
+function saveUsersLocal(list){ try{ localStorage.setItem(USERS_LS, JSON.stringify(list)); }catch(e){} }
+
+/* ---------- role / status (แอดมิน + อนุมัติสมาชิก) ----------
+   - status: 'pending' (รออนุมัติ) | 'approved' (ใช้งานได้) | 'rejected' (ถูกปฏิเสธ)
+   - role:   'admin' | 'user'
+   - บัญชีที่สมัครเป็นคนแรกของระบบ = แอดมินอัตโนมัติ (bootstrap)
+   - บัญชีเก่าที่ไม่มี role/status (ก่อนมีระบบนี้) ถือว่า approved และคนแรกสุดเป็นแอดมิน */
+let usersNeedPush = false;
+function normalizeUsers(list){
+  let changed = false;
+  const arr = (Array.isArray(list) ? list : []).filter(u => u && u.username);
+  arr.sort((a,b) => (a.createdAt||0) - (b.createdAt||0));
+  const hasAdmin = arr.some(u => u.role === 'admin' && u.status !== 'rejected');
+  arr.forEach((u,i) => {
+    if(!u.id){ u.id = uid('u'); changed = true; }
+    if(!u.createdAt){ u.createdAt = Date.now() - (arr.length - i) * 1000; changed = true; }
+    if(u.status !== 'pending' && u.status !== 'approved' && u.status !== 'rejected'){ u.status = 'approved'; changed = true; }
+    if(u.role !== 'admin' && u.role !== 'user'){ u.role = 'user'; changed = true; }
+  });
+  if(arr.length && !hasAdmin){
+    arr[0].role = 'admin';
+    if(arr[0].status === 'rejected') arr[0].status = 'approved';
+    changed = true;
+  }
+  usersNeedPush = changed;
+  return arr;
+}
+const adminCount = list => (list||[]).filter(u => u.role==='admin' && u.status==='approved').length;
+const meIn = list => { const s = getSession(); return s ? (list||[]).find(u => u.id === s.id || String(u.username)===s.username) : null; };
+async function usersPull(){
+  try{
+    const ctl = new AbortController();
+    const to = setTimeout(()=>ctl.abort('timeout'), 9000);
+    const res = await fetch(USERS_URL + '?t=' + Date.now(), {signal: ctl.signal});
+    clearTimeout(to);
+    const txt = (await res.text()).trim();
+    if(!txt) return normalizeUsers(localUsers());
+    const d = JSON.parse(txt);
+    const raw = Array.isArray(d.users) ? d.users : (d.users ? Object.values(d.users) : []);
+    const list = normalizeUsers(raw);
+    if(list.length) saveUsersLocal(list);
+    return list;
+  }catch(e){ return normalizeUsers(localUsers()); }
+}
+async function usersPush(list){
+  saveUsersLocal(list);
+  try{ await fetch(USERS_URL, {method:'POST', headers:{'Content-Type':'text/plain'}, body: JSON.stringify({users:list, updatedAt:Date.now()})}); }catch(e){}
+}
+
+function getSession(){ try{ return JSON.parse(localStorage.getItem(SESSION_KEY)||'null'); }catch(e){ return null; } }
+function setSession(u){ try{ localStorage.setItem(SESSION_KEY, JSON.stringify({id:u.id, username:u.username, role:u.role||'user', status:u.status||'approved', at:Date.now()})); }catch(e){} }
+function clearSession(){ try{ localStorage.removeItem(SESSION_KEY); }catch(e){} }
+
+function applyUserTools(){
+  const s = getSession();
+  const admin = !!(s && s.role === 'admin' && s.status !== 'rejected');
+  S.role = admin ? 'admin' : 'user';
+  const chip = $('#userChip');
+  if(chip){
+    chip.classList.toggle('admin', admin);
+    const av = chip.querySelector('.av');
+    if(av) av.textContent = admin ? '👑' : '👤';
+    chip.title = admin ? 'แอดมิน — อนุมัติสมาชิกได้' : 'บัญชีที่เข้าสู่ระบบ';
+  }
+  const b = $('#btnUsers');
+  if(b) b.style.display = admin ? '' : 'none';
+}
+function updateUsersBadge(){
+  const b = $('#btnUsers'); if(!b) return;
+  if(S.role !== 'admin'){ b.style.display = 'none'; return; }
+  const pend = localUsers().filter(u => u.status === 'pending').length;
+  b.textContent = pend ? '👑 ผู้ใช้ (' + pend + ')' : '👑 ผู้ใช้';
+}
+function updateUserChip(){
+  const s = getSession(), el = $('#userChipName');
+  if(el) el.textContent = s ? s.username : '—';
+  applyUserTools(); updateUsersBadge();
+}
+function showAuth(){ $('#authScreen').classList.add('show'); updateUserChip(); }
+function hideAuth(){ $('#authScreen').classList.remove('show'); updateUserChip(); }
+function authMsg(msg, kind){
+  const el = $('#authMsg'); if(!el) return;
+  el.textContent = msg || '';
+  el.className = 'auth-msg ' + (kind||'');
+  el.style.display = msg ? 'block' : 'none';
+}
+function authTab(which){
+  const login = which === 'login';
+  $('#tabLogin').classList.toggle('active', login);
+  $('#tabReg').classList.toggle('active', !login);
+  $('#formLogin').style.display = login ? '' : 'none';
+  $('#formReg').style.display = login ? 'none' : '';
+  authMsg('');
+}
+
+async function doRegister(){
+  const username = $('#rgUser').value.trim();
+  const pass = $('#rgPass').value, pass2 = $('#rgPass2').value;
+  if(!/^[A-Za-z0-9_.]{3,20}$/.test(username)){ authMsg('ชื่อผู้ใช้ต้องเป็นอังกฤษ/ตัวเลข 3–20 ตัว (ใช้ _ . ได้)','err'); return; }
+  if(pass.length < 4){ authMsg('รหัสผ่านอย่างน้อย 4 ตัวอักษร','err'); return; }
+  if(pass !== pass2){ authMsg('รหัสผ่านทั้งสองช่องไม่ตรงกัน','err'); return; }
+  const btn = $('#btnReg'); btn.disabled = true; btn.innerHTML = '<span class="spin"></span> กำลังสมัคร…';
+  const users = (await usersPull()) || [];
+  if(users.some(u => String(u.username).toLowerCase() === username.toLowerCase())){
+    btn.disabled = false; btn.textContent = 'สมัครฟรี & เข้าใช้งาน';
+    authMsg('ชื่อผู้ใช้นี้ถูกใช้แล้ว — ลองชื่ออื่น','err'); return;
+  }
+  /* บัญชีแรกของระบบ = แอดมินอัตโนมัติ ; คนถัดไป = รออนุมัติ */
+  const isFirst = users.filter(u => u.status !== 'rejected').length === 0;
+  const user = { id: uid('u'), username, passHash: hashPass(username, pass), createdAt: Date.now(),
+                 role: isFirst ? 'admin' : 'user', status: isFirst ? 'approved' : 'pending' };
+  users.push(user);
+  await usersPush(users);
+  btn.disabled = false; btn.textContent = 'สมัครฟรี & เข้าใช้งาน';
+  if(isFirst){
+    setSession(user); S.name = user.username; authMsg('');
+    toast('สมัครสำเร็จ — คุณเป็นแอดมินคนแรกของระบบ 👑', 'ok');
+    startApp();
+  } else {
+    $('#formReg').reset();
+    authTab('login');
+    $('#lgUser').value = username; $('#lgPass').value = '';
+    authMsg('สมัครสำเร็จ! บัญชีของคุณรอแอดมินอนุมัติ — อนุมัติแล้วเข้าสู่ระบบได้เลย','ok');
+    toast('สมัครสำเร็จ — รอแอดมินอนุมัติก่อนเข้าใช้งาน','ok');
+  }
+}
+
+async function doLogin(){
+  const username = $('#lgUser').value.trim(), pass = $('#lgPass').value;
+  if(!username || !pass){ authMsg('กรอกชื่อผู้ใช้และรหัสผ่าน','err'); return; }
+  const btn = $('#btnLogin'); btn.disabled = true; btn.innerHTML = '<span class="spin"></span> กำลังเข้าสู่ระบบ…';
+  const users = (await usersPull()) || [];
+  const user = users.find(u => String(u.username).toLowerCase() === username.toLowerCase());
+  btn.disabled = false; btn.textContent = 'เข้าสู่ระบบ';
+  if(!user || user.passHash !== hashPass(user.username, pass)){ authMsg('ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง','err'); return; }
+  if(user.status === 'pending'){ authMsg('บัญชีนี้ยังรอการอนุมัติจากแอดมิน — กรุณารอสักครู่แล้วลองเข้าสู่ระบบใหม่','err'); return; }
+  if(user.status === 'rejected'){ authMsg('บัญชีนี้ถูกปฏิเสธการใช้งาน — กรุณาติดต่อแอดมิน','err'); return; }
+  if(usersNeedPush) await usersPush(users);   /* เก็บ role/status ของบัญชีเก่าลงคลาวด์ */
+  setSession(user); S.name = user.username; authMsg('');
+  toast((user.role === 'admin' ? '👑 ยินดีต้อนรับกลับ แอดมิน ' : 'ยินดีต้อนรับกลับ ') + user.username, 'ok');
+  startApp();
+}
+
+function doLogout(){
+  if(!confirm('ออกจากระบบ?\n\nข้อมูลในเครื่องจะยังอยู่ กลับมาเข้าสู่ระบบใหม่ได้')) return;
+  clearSession(); S.name = '';
+  location.reload();
+}
+
+$('#tabLogin').addEventListener('click', ()=>authTab('login'));
+$('#tabReg').addEventListener('click', ()=>authTab('reg'));
+$('#formLogin').addEventListener('submit', e => { e.preventDefault(); doLogin(); });
+$('#formReg').addEventListener('submit', e => { e.preventDefault(); doRegister(); });
+$('#btnLogout').addEventListener('click', doLogout);
+
+/* ---------- แอดมิน: อนุมัติสมาชิก / กำหนดสิทธิ์ ---------- */
+function fmtWhen(ts){
+  if(!ts) return '—';
+  try{ return new Date(ts).toLocaleDateString('th-TH',{day:'2-digit',month:'short',year:'2-digit'}) + ' ' + new Date(ts).toLocaleTimeString('th-TH',{hour:'2-digit',minute:'2-digit'}); }
+  catch(e){ return '—'; }
+}
+async function openUsers(){
+  if(S.role !== 'admin'){ toast('เฉพาะแอดมินเท่านั้น','err'); return; }
+  $('#ovUsers').classList.add('show');
+  await renderUsers();
+}
+async function renderUsers(){
+  const box = $('#usersList'); if(!box) return;
+  box.innerHTML = '<div class="muted" style="padding:4px 2px">กำลังโหลด…</div>';
+  const users = (await usersPull()) || [];
+  if(usersNeedPush) await usersPush(users);
+  const me = meIn(users);
+  const order = { pending:0, approved:1, rejected:2 };
+  const rows = users.slice().sort((a,b) => (order[a.status]-order[b.status]) || ((a.createdAt||0)-(b.createdAt||0)));
+  const pend = users.filter(u => u.status === 'pending').length;
+  const head = `<div class="muted" style="margin-bottom:10px">ทั้งหมด ${users.length} บัญชี • รออนุมัติ ${pend} • แอดมิน ${adminCount(users)}</div>`;
+  if(!rows.length){ box.innerHTML = head + '<div class="muted">ยังไม่มีบัญชีในระบบ</div>'; return; }
+  box.innerHTML = head + rows.map(u => {
+    const isMe = me && me.id === u.id;
+    const acts = [];
+    if(u.status === 'pending') acts.push(`<button class="btn primary" data-ua="approve" data-uid="${esc(u.id)}">✓ อนุมัติ</button>`);
+    if(u.status === 'pending') acts.push(`<button class="btn ghost" data-ua="reject" data-uid="${esc(u.id)}">✕ ปฏิเสธ</button>`);
+    if(u.status === 'rejected') acts.push(`<button class="btn soft" data-ua="approve" data-uid="${esc(u.id)}">↺ คืนสิทธิ์</button>`);
+    if(u.status === 'approved' && u.role !== 'admin') acts.push(`<button class="btn soft" data-ua="promote" data-uid="${esc(u.id)}">👑 ตั้งเป็นแอดมิน</button>`);
+    if(u.status === 'approved' && u.role === 'admin' && !isMe && adminCount(users) > 1) acts.push(`<button class="btn ghost" data-ua="demote" data-uid="${esc(u.id)}">ถอดแอดมิน</button>`);
+    if(!isMe) acts.push(`<button class="btn ghost" data-ua="delete" data-uid="${esc(u.id)}" style="color:var(--red)">ลบ</button>`);
+    const badges = (u.role === 'admin' ? '<span class="badge admin">👑 แอดมิน</span> ' : '') +
+      (u.status === 'pending' ? '<span class="badge pending">รออนุมัติ</span>' :
+       u.status === 'rejected' ? '<span class="badge rejected">ถูกปฏิเสธ</span>' :
+       '<span class="badge approved">ใช้งานได้</span>');
+    return `<div class="u-row ${esc(u.status)}">
+      <div class="u-main"><b>${esc(u.username)}</b>${isMe ? ' <span class="badge">คุณ</span>' : ''}<br>${badges}
+        <span class="muted">สมัคร ${esc(fmtWhen(u.createdAt))}</span></div>
+      <div class="u-actions">${acts.join('')}</div>
+    </div>`;
+  }).join('');
+}
+async function userAction(id, action){
+  if(S.role !== 'admin'){ toast('เฉพาะแอดมินเท่านั้น','err'); return; }
+  const users = (await usersPull()) || [];
+  const u = users.find(x => x.id === id);
+  if(!u){ toast('ไม่พบบัญชีนี้ — ลองกดรีเฟรช','err'); return; }
+  const me = meIn(users);
+  if(action === 'approve'){ u.status = 'approved'; }
+  else if(action === 'reject'){ u.status = 'rejected'; }
+  else if(action === 'promote'){ u.role = 'admin'; u.status = 'approved'; }
+  else if(action === 'demote'){
+    if(me && me.id === u.id){ toast('ถอดสิทธิ์ตัวเองไม่ได้','err'); return; }
+    if(adminCount(users) <= 1){ toast('ต้องมีแอดมินอย่างน้อย 1 คน','err'); return; }
+    u.role = 'user';
+  } else if(action === 'delete'){
+    if(me && me.id === u.id){ toast('ลบบัญชีตัวเองไม่ได้','err'); return; }
+    if(u.role === 'admin' && adminCount(users) <= 1){ toast('ต้องมีแอดมินอย่างน้อย 1 คน','err'); return; }
+    if(!confirm('ลบบัญชี "' + u.username + '" ออกจากระบบ?\n\nผู้ใช้คนนี้จะเข้าสู่ระบบไม่ได้อีก')) return;
+    users.splice(users.indexOf(u), 1);
+  }
+  await usersPush(users);
+  const msg = action==='approve' ? 'อนุมัติ ' + u.username + ' แล้ว — เข้าใช้งานได้เลย'
+    : action==='reject' ? 'ปฏิเสธ ' + u.username + ' แล้ว'
+    : action==='promote' ? 'ตั้ง ' + u.username + ' เป็นแอดมินแล้ว 👑'
+    : action==='demote' ? 'ถอดสิทธิ์แอดมิน ' + u.username + ' แล้ว'
+    : 'ลบบัญชี ' + u.username + ' แล้ว';
+  toast(msg, 'ok');
+  await renderUsers();
+  updateUserChip();
+}
+$('#btnUsers').addEventListener('click', openUsers);
+$('#btnCloseUsers').addEventListener('click', ()=>$('#ovUsers').classList.remove('show'));
+$('#btnUsersRefresh').addEventListener('click', ()=>renderUsers());
+$('#usersList').addEventListener('click', e => {
+  const b = e.target.closest('button[data-ua]');
+  if(!b) return;
+  userAction(b.dataset.uid, b.dataset.ua);
+});
+
+/* เริ่มใช้งานจริงหลังล็อกอิน — ซิงก์/เรียลไทม์เริ่มเมื่อผ่านประตูแล้วเท่านั้น */
+function startApp(){
+  if(S.booted) return;
+  S.booted = true;
+  hideAuth();
+  /* ดึงบทบาทล่าสุดของฉันจากคลาวด์ (แอดมินอาจเปลี่ยนสิทธิ์ภายหลัง) */
+  usersPull().then(list => { const me = meIn(list); if(me) setSession(me); updateUserChip(); });
+  setInterval(()=>{ if(S.role === 'admin' && !document.hidden) usersPull().then(updateUserChip); }, 15000);
+  connectRealtime();
+  cloudPull(true);
+  fbConnect(); fbPull(true);
+  setInterval(()=>{ if(!document.hidden && !S.pushing){ cloudPull(true); fbPull(true); } }, 5000);
+  document.addEventListener('visibilitychange', ()=>{ if(!document.hidden){ cloudPull(true); } });
+  window.addEventListener('online', ()=>{ syncLabel(); cloudPull(true); if(S.dirty) cloudPush(); });
+  window.addEventListener('offline', syncLabel);
+  window.addEventListener('beforeunload', ()=>{ if(S.dirty){ try{ navigator.sendBeacon && navigator.sendBeacon(cloudURL(), JSON.stringify(S.db)); }catch(e){} } });
+}
+
+/* ---------- storage ---------- */
+const lsKey = () => 'pfseed_db_' + S.room;
+function saveLocal(){ try{ localStorage.setItem(lsKey(), JSON.stringify(S.db)); }catch(e){} }
+function loadLocal(){
+  try{
+    const raw = localStorage.getItem(lsKey());
+    if(raw){ const d = JSON.parse(raw); if(d && d.seasons) { S.db = d; if(!Array.isArray(S.db.farmers)) S.db.farmers = []; if(!Array.isArray(S.db.shipments)) S.db.shipments = []; return true; } }
+  }catch(e){}
+  return false;
+}
+
+/* ---------- cloud sync (textdb.dev) ---------- */
+const cloudURL = () => 'https://textdb.dev/api/data/peerfarmer-seed-' + encodeURIComponent(S.room);
+const ntfyTopic = () => 'pf-seed-app-' + S.room;
+
+function setPill(state, text){
+  const p = $('#syncPill');
+  p.className = 'pill ' + state;
+  $('#syncText').textContent = text;
+}
+function syncLabel(){
+  if(S.dirty){ setPill('busy','รอซิงก์…'); return; }
+  if(!navigator.onLine){ setPill('off','ออฟไลน์ — เก็บในเครื่อง'); return; }
+  setPill('ok','ซิงก์แล้ว ' + (S.lastSync ? S.lastSync.toLocaleTimeString('th-TH',{hour:'2-digit',minute:'2-digit',second:'2-digit'}) : ''));
+}
+
+let pushTimer = null;
+function schedulePush(){
+  S.dirty = true; syncLabel();
+  clearTimeout(pushTimer);
+  pushTimer = setTimeout(()=>{ cloudPush(); fbPush(); }, 900);
+}
+
+async function cloudPush(){
+  if(!navigator.onLine){ syncLabel(); return; }
+  if(S.pushing){ schedulePush(); return; }
+  S.pushing = true; setPill('busy','กำลังซิงก์…');
+  S.db.meta.updatedAt = Date.now();
+  try{
+    await fetch(cloudURL(), { method:'POST', headers:{'Content-Type':'text/plain'}, body: JSON.stringify(S.db) });
+    S.dirty = false; S.lastSync = new Date();
+  }catch(e){ /* keep dirty; retry via poll */ }
+  S.pushing = false; syncLabel();
+}
+
+function mergeRemote(remote){
+  let changed = false;
+  ['seasons','intake','lots','farmers','shipments'].forEach(k => {
+    const arr = remote[k];
+    if(!Array.isArray(arr)) return;
+    const map = new Map(S.db[k].map(r => [r.id, r]));
+    arr.forEach(r => {
+      if(!r || !r.id) return;
+      if(k==='seasons' && S.db.seasons.some(x=>x.label === r.label)) return; /* กันฤดูกาลชื่อซ้ำ */
+      const cur = map.get(r.id);
+      if(!cur){ S.db[k].push(r); changed = true; }
+      else if((r.rev||0) > (cur.rev||0)){ Object.keys(cur).forEach(kk=>delete cur[kk]); Object.assign(cur, r); changed = true; }
+    });
+  });
+  /* ลบฤดูกาลซ้ำ (จากอุปกรณ์เก่า) — เก็บตัวที่ถูกข้อมูลอ้างอิง หรือตัวแรกของชื่อนั้น */
+  const byLabel = new Map();
+  S.db.seasons.forEach(s => { const arr = byLabel.get(s.label) || []; arr.push(s); byLabel.set(s.label, arr); });
+  const used = new Set([...S.db.intake, ...S.db.lots].map(r=>r.seasonId));
+  const removeIds = new Set();
+  byLabel.forEach(arr => {
+    if(arr.length < 2) return;
+    const keep = arr.find(x=>used.has(x.id)) || arr[0];
+    arr.forEach(x => { if(x.id !== keep.id && !used.has(x.id)) removeIds.add(x.id); });
+  });
+  if(removeIds.size){
+    const before = S.db.seasons.length;
+    S.db.seasons = S.db.seasons.filter(s => !removeIds.has(s.id));
+    if(S.db.seasons.length !== before) changed = true;
+  }
+  /* ลบเกษตรกรรหัสซ้ำ (สองเครื่องบันทึกพร้อมกันได้ id คนละตัว) — เก็บตัวที่ยังใช้งานและข้อมูลครบกว่า */
+  const byCode = new Map();
+  S.db.farmers.forEach(f => { const arr = byCode.get(f.code) || []; arr.push(f); byCode.set(f.code, arr); });
+  const rmFarmerIds = new Set();
+  const fScore = x => (x.deleted?0:4) + (x.phone?2:0) + (x.area?1:0) + (x.address?1:0);
+  byCode.forEach(arr => {
+    if(arr.length < 2) return;
+    const keep = arr.slice().sort((a,b)=> fScore(b)-fScore(a) || (a.id<b.id?-1:1))[0];
+    arr.forEach(x => { if(x.id !== keep.id) rmFarmerIds.add(x.id); });
+  });
+  if(rmFarmerIds.size){
+    const before = S.db.farmers.length;
+    S.db.farmers = S.db.farmers.filter(f => !rmFarmerIds.has(f.id));
+    if(S.db.farmers.length !== before) changed = true;
+  }
+  return changed;
+}
+
+async function cloudPull(silent){
+  if(!navigator.onLine){ syncLabel(); return; }
+  try{
+    const ctl = new AbortController();
+    const to = setTimeout(()=>ctl.abort('timeout'), 9000);
+    const res = await fetch(cloudURL() + '?t=' + Date.now(), {signal: ctl.signal});
+    clearTimeout(to);
+    const txt = (await res.text()).trim();
+    if(!txt) {
+      /* คลาวด์ว่าง → สร้างฤดูกาลเริ่มต้นและ push ขึ้นคลาวด์ */
+      if(activeSeasons().length===0){ ensureSeason(); saveLocal(); schedulePush(); renderAll(); }
+      if(!S.dirty) { S.lastSync = new Date(); syncLabel(); }
+      return;
+    }
+    let remote; try{ remote = JSON.parse(txt); }catch(e){ return; }
+    if(remote && remote.seasons){
+      if(mergeRemote(remote)){ saveLocal(); renderAll(); if(!silent) toast('อัปเดตข้อมูลจากเพื่อนร่วมทีม','ok'); }
+    }
+    /* ถ้าทั้งเครื่องและคลาวด์ยังไม่มีฤดูกาลเลย ค่อยสร้างฤดูกาลเริ่มต้น */
+    if(activeSeasons().length===0){ ensureSeason(); saveLocal(); schedulePush(); renderAll(); }
+    if(!S.dirty){ S.lastSync = new Date(); }
+  }catch(e){ /* offline / timeout */ }
+  syncLabel();
+}
+
+/* ---------- realtime (ntfy SSE) ---------- */
+function connectRealtime(){
+  try{
+    if(S.es) S.es.close();
+    const es = new EventSource('https://ntfy.sh/' + ntfyTopic() + '/sse');
+    es.onmessage = () => { clearTimeout(connectRealtime._t); connectRealtime._t = setTimeout(()=>cloudPull(true), 600); };
+    es.onerror = () => { /* EventSource auto-reconnects */ };
+    S.es = es;
+  }catch(e){}
+}
+
+/* ---------- data helpers ---------- */
+function seasonLabel(id){ const s = S.db.seasons.find(x=>x.id===id); return s ? s.label : ''; }
+function activeSeasons(){ return S.db.seasons.filter(s=>!s.deleted); }
+function intakeList(){ return S.db.intake.filter(r=>!r.deleted); }
+function lotsList(){ return S.db.lots.filter(r=>!r.deleted); }
+function shipList(){ return (S.db.shipments||[]).filter(r=>!r.deleted); }
+function shipmentsInSeason(){
+  if(S.season==='all') return shipList();
+  return shipList().filter(s => (s.lots||[]).some(id => { const l = S.db.lots.find(x=>x.id===id); return l && !l.deleted && l.seasonId===S.season; }));
+}
+function inSeason(arr, key){ key = key||'seasonId'; return arr.filter(r => S.season==='all' || r[key]===S.season); }
+function ensureSeason(){
+  if(activeSeasons().length===0){
+    const y = new Date().getFullYear() + 543;
+    S.db.seasons.push({ id: uid('s'), label: y + '/1', rev:0 });
+    return true;
+  }
+  return false;
+}
+function avg(nums){ const v = nums.filter(n=>n!=null && !isNaN(n)); return v.length ? v.reduce((a,b)=>a+b,0)/v.length : null; }
+
+function nextLotId(){
+  let mx = 0;
+  lotsList().forEach(l => { const m = /^LOT-(\d+)$/.exec(l.lotId||''); if(m) mx = Math.max(mx, parseInt(m[1],10)); });
+  return 'LOT-' + String(mx+1).padStart(4,'0');
+}
+
+function dashboardTotals(){
+  const intake = inSeason(intakeList());
+  const lots = inSeason(lotsList());
+  const totIntake = intake.reduce((a,r)=>a+(+r.weight||0),0);
+  const totExport = lots.filter(l=>l.status==='exported').reduce((a,l)=>a+(+l.weight||0),0);
+  const totMerged = intake.filter(r=>r.merged).reduce((a,r)=>a+(+r.weight||0),0);
+  return { intake, lots, totIntake, totExport, totRemain: totIntake - totExport, totMerged };
+}
+
+/* ---------- rendering ---------- */
+function renderSeasonSelects(){
+  const list = activeSeasons();
+  const opts = ['<option value="all">ฤดูกาลทั้งหมด</option>'].concat(list.map(s=>`<option value="${esc(s.id)}">${esc(s.label)}</option>`));
+  $('#seasonFilter').innerHTML = opts.join('');
+  $('#seasonFilter').value = S.season;
+  if(S.season!=='all' && !list.find(s=>s.id===S.season)) S.season='all';
+  $('#fSeason').innerHTML = list.map(s=>`<option value="${esc(s.id)}">${esc(s.label)}</option>`).join('');
+  const cur = list.find(s=>s.id===S.season);
+  if(cur) $('#fSeason').value = cur.id;
+  $('#seasonFilter').value = S.season;
+}
+
+function renderDash(){
+  const t = dashboardTotals();
+  $('#stIntake').textContent = fmt(t.totIntake);
+  $('#stExport').textContent = fmt(t.totExport);
+  $('#stRemain').textContent = fmt(t.totRemain);
+  $('#stIntakeD').textContent = t.intake.length + ' รายการรับเข้า';
+  $('#stExportD').textContent = t.lots.filter(l=>l.status==='exported').length + ' ล็อตที่ส่งออกแล้ว';
+  $('#dashSeasonLbl').textContent = S.season==='all' ? ' (ทุกฤดูกาล)' : ' • ' + seasonLabel(S.season);
+
+  const waiting = t.intake.filter(r=>!r.merged).length;
+  const lotsWait = t.lots.filter(l=>l.status==='wait' && !l.shipId).length;
+  const lotsReady = t.lots.filter(l=>l.status==='ready' && !l.shipId).length;
+  const farmers = new Set(t.intake.map(r=>r.farmer)).size;
+  const ships = shipmentsInSeason();
+  const shipW = ships.reduce((a,s)=>a+(+s.weight||0),0);
+  $('#dashChips').innerHTML =
+    `<span class="chip">👨‍🌾 เกษตรกร ${farmers} คน</span>` +
+    `<span class="chip">⏳ รอรวมล็อต ${fmt(t.totIntake - t.totMerged)} กก. (${waiting} รายการ)</span>` +
+    `<span class="chip">📦 รอแพ็ค ${lotsWait} ล็อต</span>` +
+    `<span class="chip">🚚 พร้อมส่งออก ${lotsReady} ล็อต</span>` +
+    `<span class="chip">🚢 ชุดส่งออก ${ships.length} ชุด (${fmt(shipW)} กก.)</span>`;
+
+  const crops = {};
+  t.intake.forEach(r => {
+    const c = crops[r.crop] = crops[r.crop] || {in:0, merged:0, exp:0, lots:0};
+    c.in += +r.weight||0; if(r.merged) c.merged += +r.weight||0;
+  });
+  t.lots.forEach(l => {
+    const c = crops[l.crop] = crops[l.crop] || {in:0, merged:0, exp:0, lots:0};
+    c.lots++; if(l.status==='exported') c.exp += +l.weight||0;
+  });
+  const rows = Object.keys(crops).sort((a,b)=>crops[b].in-crops[a].in).map(c => {
+    const d = crops[c];
+    return `<tr><td><b>${esc(c)}</b></td><td class="num">${fmt(d.in)}</td><td class="num">${fmt(d.merged)}</td><td class="num">${fmt(d.exp)}</td><td class="num">${d.lots}</td></tr>`;
+  }).join('');
+  $('#tblCrop tbody').innerHTML = rows || '<tr><td colspan="5"><div class="empty"><div class="big">🌾</div>ยังไม่มีข้อมูลในฤดูกาลที่เลือก</div></td></tr>';
+}
+
+function renderIntake(){
+  const farmers = [...new Set(intakeList().map(r=>r.farmer))].sort();
+  $('#farmerList').innerHTML = farmers.map(f=>`<option value="${esc(f)}">`).join('');
+  $('#varietyList').innerHTML = [...new Set(intakeList().map(r=>r.variety).filter(Boolean))].sort().map(v=>`<option value="${esc(v)}">`).join('');
+  const fSel = $('#fiFarmer');
+  fSel.innerHTML = '<option value="">เกษตรกรทั้งหมด</option>' + farmers.map(f=>`<option value="${esc(f)}">${esc(f)}</option>`).join('');
+  fSel.value = farmers.includes(S.fIntake.farmer) ? S.fIntake.farmer : '';
+  S.fIntake.farmer = fSel.value;
+  const F = S.fIntake, q = (F.q||'').trim().toLowerCase();
+  let rows = inSeason(intakeList());
+  if(fSel.value) rows = rows.filter(r=>r.farmer===fSel.value);
+  if(F.from) rows = rows.filter(r=> new Date(r.ts).toLocaleDateString('sv-SE') >= F.from);
+  if(F.to) rows = rows.filter(r=> new Date(r.ts).toLocaleDateString('sv-SE') <= F.to);
+  if(q) rows = rows.filter(r=> (r.farmer+' '+r.crop+' '+(r.variety||'')).toLowerCase().includes(q));
+  const sorted = rows.sort((a,b)=>b.ts-a.ts);
+  const html = sorted.map(r => `
+    <tr>
+      <td class="muted">${timeStr(r.ts)}</td>
+      <td class="nw">${esc(r.crop)}</td>
+      <td class="nw">${r.variety ? esc(r.variety) : '<span class="muted">—</span>'}</td>
+      <td class="nw"><b>${esc(r.farmer)}</b></td>
+      <td class="num">${fmt(r.weight)}</td>
+      <td class="num">${pct(r.moist)}</td>
+      <td class="num">${pct(r.vigor)}</td>
+      <td class="num">${pct(r.germ)}</td>
+      <td class="num">${pct(r.purity)}</td>
+      <td class="num">${r.seed1000!=null&&r.seed1000!=='' ? esc(r.seed1000) : '<span class="muted">—</span>'}</td>
+      <td class="notes-cell">${r.notes ? esc(r.notes) : '<span class="muted">—</span>'}</td>
+      <td>${r.merged ? `<span class="badge b-blue">รวมแล้ว → ${esc(r.merged)}</span>` : '<span class="badge b-gray">รอรวมล็อต</span>'}</td>
+      <td style="white-space:nowrap">
+        <button class="btn ghost sm" data-edit-intake="${esc(r.id)}" title="แก้ไข">✏️</button>
+        ${r.merged ? '' : `<button class="btn danger sm" data-del-intake="${esc(r.id)}" title="ลบรายการ">🗑</button>`}
+      </td>
+    </tr>`).join('');
+  $('#tblIntake tbody').innerHTML = html || '<tr><td colspan="13"><div class="empty"><div class="big">📭</div>ยังไม่มีรายการรับเข้าที่ตรงกับตัวกรอง</div></td></tr>';
+  $('#intakeCountLbl').textContent = 'แสดง ' + sorted.length + ' / ' + inSeason(intakeList()).length + ' รายการ';
+}
+
+function farmerGroups(){
+  const map = new Map();
+  inSeason(intakeList()).filter(r=>!r.merged).forEach(r => {
+    const key = r.farmer + '||' + r.crop + '||' + (r.variety||'');
+    const g = map.get(key) || { key, farmer:r.farmer, crop:r.crop, variety:r.variety||'', ids:[], weight:0, germ:[], moist:[], purity:[], vigor:[], seed:[] };
+    g.ids.push(r.id); g.weight += +r.weight||0;
+    g.germ.push(+r.germ); g.moist.push(+r.moist); g.purity.push(+r.purity);
+    if(r.vigor!=null && r.vigor!=='') g.vigor.push(+r.vigor);
+    if(r.seed1000!=null && r.seed1000!=='') g.seed.push(+r.seed1000);
+    map.set(key, g);
+  });
+  return [...map.values()].sort((a,b)=> a.farmer.localeCompare(b.farmer,'th'));
+}
+
+function renderMerge(){
+  const groups = farmerGroups();
+  // drop stale selections
+  const valid = new Set(groups.map(g=>g.key));
+  S.mergeSel.forEach(k => { if(!valid.has(k)) S.mergeSel.delete(k); });
+
+  $('#mergeList').innerHTML = groups.length ? groups.map(g => {
+    const sel = S.mergeSel.has(g.key);
+    return `<div class="farmer-row ${sel?'sel':''}" data-gkey="${esc(g.key)}">
+      <input type="checkbox" ${sel?'checked':''} data-gkey="${esc(g.key)}">
+      <div class="fx"><div class="fn">👨‍🌾 ${esc(g.farmer)}</div><div class="fm">${esc(g.crop)}${g.variety?` • ${esc(g.variety)}`:''} • ${g.ids.length} รายการ • งอก ${pct(avg(g.germ))} • ชื้น ${pct(avg(g.moist))} • แข็งแรง ${pct(avg(g.vigor))}${g.seed.length?` • 1,000เมล็ด ${fmt(avg(g.seed))} ก.`:''}</div></div>
+      <div class="fw"><b>${fmt(g.weight)}</b> กก.<small>รวมน้ำหนัก</small></div>
+    </div>`;
+  }).join('') : '<div class="empty"><div class="big">🤝</div>ไม่มีรายการรอรวมล็อตในฤดูกาลนี้<br><span class="muted">บันทึกรับเข้าก่อน แล้วกลับมาที่หน้านี้</span></div>';
+
+  // summary
+  const sel = groups.filter(g=>S.mergeSel.has(g.key));
+  const cropSet = [...new Set(sel.map(g=>g.crop))];
+  const varSet = [...new Set(sel.map(g=>g.variety).filter(Boolean))];
+  $('#msFarmers').textContent = sel.length;
+  $('#msCrop').textContent = cropSet.length===1 ? cropSet[0] : (cropSet.length ? 'คละกัน ⚠️' : '—');
+  $('#msVariety').textContent = varSet.length===1 ? varSet[0] : (varSet.length ? 'หลายสายพันธุ์' : '—');
+  $('#lotNameList').innerHTML = lotsList().filter(l=>l.customName).map(l=>`<option value="${esc(l.customName)}">`).join('');
+  $('#msWeight').textContent = fmt(sel.reduce((a,g)=>a+g.weight,0)) + ' กก.';
+  $('#msGerm').textContent = pct(avg(sel.flatMap(g=>g.germ)));
+  $('#msMoist').textContent = pct(avg(sel.flatMap(g=>g.moist)));
+  $('#msPurity').textContent = pct(avg(sel.flatMap(g=>g.purity)));
+  $('#msVigor').textContent = pct(avg(sel.flatMap(g=>g.vigor)));
+  const seedAvg = avg(sel.flatMap(g=>g.seed));
+  $('#msSeed').textContent = seedAvg==null ? '—' : fmt(seedAvg) + ' กรัม';
+  $('#btnCreateLot').disabled = !(sel.length>=1 && cropSet.length===1 && varSet.length<=1 && ($('#msCountry').value||'').trim().length>0);
+}
+
+function renderLots(){
+  const lots = inSeason(lotsList()).filter(l=>!l.shipId).sort((a,b)=> (b.createdTs||0)-(a.createdTs||0));
+  $('#lotsEmpty').style.display = lots.length ? 'none' : 'block';
+  $('#lotsGrid').innerHTML = lots.map(l => {
+    const st = STATUS[l.status] || STATUS.wait;
+    const farmers = [...new Set((l.sources||[]).map(s=>s.farmer))].join(', ');
+    return `<div class="lot" data-lot="${esc(l.id)}">
+      <div class="head"><span class="lotid">🏷 ${esc(l.lotId)}</span>${l.customName?`<span class="badge b-gray" title="รหัสระบบ">${esc(l.autoLotId)}</span>`:''}<span class="badge ${st.cls}">${st.t}</span><span class="badge b-gray">${esc(seasonLabel(l.seasonId))}</span></div>
+      <div class="country">🌍 ปลายทาง: <b>${esc(l.country)}</b>${l.exportDate ? ` • 🗓 ส่งออก ${thaiDate(l.exportDate)}` : ''}</div>
+      <div class="kv">
+        <div><span>น้ำหนักรวม</span><b>${fmt(l.weight)}</b> กก.</div>
+        <div><span>ชนิดพืช</span><b>${esc(l.crop)}${l.variety?` • ${esc(l.variety)}`:''}</b></div>
+        <div><span>ความงอกเฉลี่ย</span><b>${pct(l.germ)}</b></div>
+        <div><span>ความชื้นเฉลี่ย</span><b>${pct(l.moist)}</b></div>
+        <div><span>ความบริสุทธิ์เฉลี่ย</span><b>${pct(l.purity)}</b></div>
+        <div><span>ความแข็งแรงเฉลี่ย</span><b>${pct(l.vigor)}</b></div>
+        <div><span>1,000 เมล็ดเฉลี่ย</span><b>${l.seed1000!=null ? fmt(l.seed1000)+' ก.' : '—'}</b></div>
+      </div>
+      <div class="farmers">👨‍🌾 จากเกษตรกร: ${esc(farmers)} <span class="merge-src">(${(l.sources||[]).length} รายการรับเข้า)</span></div>
+      <div class="seg" role="group" aria-label="สถานะ">
+        ${['wait','ready','exported'].map(k=>`<button class="${l.status===k?STATUS[k].seg:''}" data-set-status="${k}">${STATUS[k].t}</button>`).join('')}
+      </div>
+      <div class="foot">
+        ${l.status==='exported' ? `<input type="date" value="${esc(l.exportDate||todayISO())}" data-export-date>` : '<span class="muted">เปลี่ยนสถานะด้านบน — เมื่อ "ส่งออกแล้ว" จะให้ระบุวันที่</span>'}
+        <span class="spacer"></span>
+        <button class="btn soft sm" data-print-label="${esc(l.id)}" title="พิมพ์ฉลากติดถุง">🖨 ฉลาก</button>
+        <button class="btn ghost sm" data-lot-to-ship="${esc(l.id)}" title="เลือกไปจัดชุดส่งออก">🚢 เลือกจัดชุดส่งออก</button>
+        <button class="btn danger sm" data-del-lot="${esc(l.id)}">🗑 ลบล็อต</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+/* ---------- shipments & farmers & report ---------- */
+function renderShip(){
+  const countries = [...new Set(lotsList().map(l=>l.country).concat(shipList().map(s=>s.country)).filter(Boolean))].sort();
+  $('#countryList').innerHTML = countries.map(c=>`<option value="${esc(c)}">`).join('');
+  const cand = inSeason(lotsList()).filter(l=>!l.shipId).sort((a,b)=>(b.createdTs||0)-(a.createdTs||0));
+  const valid = new Set(cand.map(l=>l.id));
+  S.shipSel.forEach(id=>{ if(!valid.has(id)) S.shipSel.delete(id); });
+  if(!$('#spInv').value) $('#spInv').placeholder = 'เช่น ' + nextInv();
+  $('#shipLotList').innerHTML = cand.length ? cand.map(l=>{
+    const sel = S.shipSel.has(l.id);
+    return `<div class="farmer-row ${sel?'sel':''}" data-lot-key="${esc(l.id)}">
+      <input type="checkbox" ${sel?'checked':''} data-lot-key="${esc(l.id)}">
+      <div class="fx"><div class="fn">🏷 ${esc(l.lotId)} <span class="badge ${STATUS[l.status]?.cls||'b-gray'}">${STATUS[l.status]?.t||''}</span></div>
+      <div class="fm">${esc(l.crop)}${l.variety?` • ${esc(l.variety)}`:''} • งอก ${pct(l.germ)} • ชื้น ${pct(l.moist)} • ${esc(seasonLabel(l.seasonId))}</div></div>
+      <div class="fw"><b>${fmt(l.weight)}</b> กก.<small>🌍 ${esc(l.country)}</small></div>
+    </div>`;
+  }).join('') : '<div class="empty"><div class="big">🏷</div>ไม่มีล็อตว่างสำหรับจัดชุดส่งออก<br><span class="muted">รวมล็อตก่อน หรือยุบชุดส่งออกเดิม</span></div>';
+  const sel = cand.filter(l=>S.shipSel.has(l.id));
+  $('#spCount').textContent = sel.length;
+  $('#spWeight').textContent = fmt(sel.reduce((a,l)=>a+(+l.weight||0),0)) + ' กก.';
+  $('#spCrops').textContent = [...new Set(sel.map(l=>l.crop))].join(', ') || '—';
+  $('#spGerm').textContent = pct(avg(sel.map(l=>+l.germ)));
+  $('#spMoist').textContent = pct(avg(sel.map(l=>+l.moist)));
+  $('#spVigor').textContent = pct(avg(sel.map(l=>+l.vigor)));
+  $('#btnCreateShip').disabled = !(sel.length>=1 && ($('#spInv').value||'').trim() && ($('#spCountry').value||'').trim());
+  const ships = shipmentsInSeason().sort((a,b)=>(b.ts||0)-(a.ts||0));
+  $('#shipEmpty').style.display = ships.length ? 'none' : 'block';
+  $('#shipGrid').innerHTML = ships.map(s=>{
+    const lots = (s.lots||[]).map(id=>S.db.lots.find(x=>x.id===id)).filter(Boolean);
+    return `<div class="lot">
+      <div class="head"><span class="lotid">🧾 ${esc(s.inv)}</span><span class="badge b-green">ส่งออกแล้ว</span><span class="badge b-gray">${esc(seasonLabel(lots[0]?.seasonId))}</span></div>
+      <div class="country">🌍 ปลายทาง: <b>${esc(s.country)}</b>${s.date?` • 🗓 ${thaiDate(s.date)}`:''}</div>
+      <div class="kv">
+        <div><span>น้ำหนักรวม</span><b>${fmt(s.weight)}</b> กก.</div>
+        <div><span>จำนวนล็อต</span><b>${lots.length}</b> ล็อต</div>
+        <div><span>งอกเฉลี่ย</span><b>${pct(s.germ)}</b></div>
+        <div><span>ชื้นเฉลี่ย</span><b>${pct(s.moist)}</b></div>
+        <div><span>บริสุทธิ์เฉลี่ย</span><b>${pct(s.purity)}</b></div>
+        <div><span>แข็งแรงเฉลี่ย</span><b>${pct(s.vigor)}</b></div>
+      </div>
+      <div class="farmers">🏷 ล็อตในชุด: ${lots.map(l=>esc(l.lotId)).join(', ')}<br>👨‍🌾 ${[...new Set(lots.flatMap(l=>(l.sources||[]).map(x=>x.farmer)))].join(', ')}</div>
+      <div class="foot"><span class="merge-src">สร้าง ${timeStr(s.ts)}</span><span class="spacer"></span>
+      <button class="btn soft sm" data-print-pack="${esc(s.id)}">🖨 ใบปะหน้า</button>
+      <button class="btn danger sm" data-unship="${esc(s.id)}">↩️ ยุบชุดส่งออก</button></div>
+    </div>`;
+  }).join('');
+}
+
+function farmerProfiles(){
+  const map = new Map();
+  intakeList().forEach(r=>{
+    const p = map.get(r.farmer) || {code:r.farmer, weight:0, n:0};
+    p.weight += +r.weight||0; p.n++;
+    map.set(r.farmer, p);
+  });
+  (S.db.farmers||[]).forEach(f=>{
+    if(f.deleted){ map.delete(f.code); return; }
+    const p = map.get(f.code) || {code:f.code, weight:0, n:0};
+    p.phone=f.phone||''; p.area=f.area||''; p.address=f.address||''; p.fid=f.id;
+    map.set(f.code, p);
+  });
+  return [...map.values()].sort((a,b)=>a.code.localeCompare(b.code,'th'));
+}
+function upsertFarmer(code){
+  if(!code) return;
+  if(!(S.db.farmers||[]).some(f=>!f.deleted && f.code===code)) S.db.farmers.push({id:uid('f'), code, phone:'', area:'', address:'', rev:0});
+}
+function renderFarmers(){
+  const Q = ($('#fqQ').value||'').trim().toLowerCase();
+  let list = farmerProfiles();
+  if(Q) list = list.filter(p=>(p.code+' '+(p.phone||'')+' '+(p.area||'')+' '+(p.address||'')).toLowerCase().includes(Q));
+  $('#farmersEmpty').style.display = list.length ? 'none' : 'block';
+  $('#farmerCards').innerHTML = list.map(p=>{
+    const ini = (p.code.replace(/[^ก-๙a-zA-Z0-9]/g,'').slice(0,2) || 'กฟ').toUpperCase();
+    return `<div class="lot farmer-card" data-fcode="${esc(p.code)}">
+      <div class="fc-head"><div class="fc-ava">${esc(ini)}</div><div><div class="fc-code">👨‍🌾 ${esc(p.code)}</div>
+      <div class="fc-sub">${p.n} รายการรับเข้า • รวม ${fmt(p.weight)} กก.</div></div></div>
+      <div class="fc-contact">${p.phone?`📞 ${esc(p.phone)}<br>`:''}${p.area?`📍 ${esc(p.area)}<br>`:''}${p.address?`🗺 ${esc(p.address)}`:''}${(!p.phone&&!p.area&&!p.address)?'<span class="muted">ยังไม่มีข้อมูลติดต่อ — กดแก้ไขเพื่อเพิ่ม</span>':''}</div>
+      <div class="foot">
+        <button class="btn soft sm" data-fhist="${esc(p.code)}">📜 ประวัติ</button>
+        <button class="btn ghost sm" data-fedit="${esc(p.code)}">✏️ แก้ไข</button>
+        <span class="spacer"></span>
+        <button class="btn danger sm" data-fdel="${esc(p.code)}" title="ลบโปรไฟล์">🗑</button>
+      </div>
+    </div>`;
+  }).join('');
+  /* รายงาน: เกษตรกรแต่ละคนส่งออกไปประเทศไหนบ้าง */
+  $('#repSeasonLbl').textContent = S.season==='all' ? 'ทุกฤดูกาล' : 'ฤดูกาล ' + seasonLabel(S.season);
+  const rep = new Map();
+  inSeason(lotsList()).filter(l=>l.status==='exported').forEach(l=>{
+    const ship = shipList().find(s=>s.id===l.shipId);
+    const country = ship?.country || l.country || 'ไม่ระบุ';
+    (l.sources||[]).forEach(src=>{
+      const r = rep.get(src.farmer) || {};
+      r[country] = (r[country]||0) + (+src.weight||0);
+      rep.set(src.farmer, r);
+    });
+  });
+  const rows = [...rep.keys()].sort((a,b)=>a.localeCompare(b,'th')).map(f=>{
+    const c = rep.get(f);
+    const total = Object.values(c).reduce((a,b)=>a+b,0);
+    return `<tr><td><b>${esc(f)}</b></td><td>${Object.keys(c).sort((a,b)=>c[b]-c[a]).map(k=>`<span class="badge b-blue" style="margin:2px">${esc(k)}: ${fmt(c[k])} กก.</span>`).join(' ')}</td><td class="num">${fmt(total)}</td></tr>`;
+  }).join('');
+  $('#tblReport tbody').innerHTML = rows || '<tr><td colspan="3"><div class="empty"><div class="big">📊</div>ยังไม่มีข้อมูลส่งออกในฤดูกาลนี้</div></td></tr>';
+}
+function openHist(code){
+  const recs = intakeList().filter(r=>r.farmer===code).sort((a,b)=>b.ts-a.ts);
+  const lots = lotsList().filter(l=>(l.sources||[]).some(s=>s.farmer===code));
+  $('#histName').textContent = code;
+  const total = recs.reduce((a,r)=>a+(+r.weight||0),0);
+  const expW = lots.filter(l=>l.status==='exported').reduce((a,l)=>a + (l.sources||[]).filter(s=>s.farmer===code).reduce((x,s)=>x+(+s.weight||0),0), 0);
+  $('#histSummary').textContent = `รับเข้ารวม ${fmt(total)} กก. (${recs.length} รายการ) • ถูกส่งออกแล้ว ${fmt(expW)} กก. • ล็อตที่เกี่ยวข้อง ${lots.length} ล็อต`;
+  $('#histList').innerHTML = recs.map(r=>{
+    const lot = lotsList().find(l=>l.lotId===r.merged);
+    const ship = lot && lot.shipId ? shipList().find(s=>s.id===lot.shipId) : null;
+    const dest = ship ? ship.country : (lot ? lot.country : null);
+    return `<div class="hist-row">
+      <span class="muted">${timeStr(r.ts)}</span>
+      <span>${esc(r.crop)}${r.variety?` (${esc(r.variety)})`:''} • <b>${fmt(r.weight)}</b> กก.</span>
+      <span>งอก ${pct(r.germ)} • ชื้น ${pct(r.moist)} • แข็งแรง ${pct(r.vigor)}</span>
+      <span>${dest?`🌍 ส่งไป <b>${esc(dest)}</b>${ship?` (🧾 ${esc(ship.inv)})`:''}`:(r.merged?`📦 ${esc(r.merged)}`:'<span class="badge b-gray">รอรวมล็อต</span>')}</span>
+    </div>`;
+  }).join('') || '<div class="empty">ยังไม่มีประวัติ</div>';
+  $('#ovHist').classList.add('show');
+}
+
+function renderAll(){
+  renderSeasonSelects();
+  renderDash();
+  renderIntake();
+  renderMerge();
+  renderLots();
+  renderShip();
+  renderFarmers();
+  syncLabel();
+}
+
+/* ---------- navigation ---------- */
+function go(page){
+  S.page = page;
+  $$('.page').forEach(p=>p.classList.toggle('active', p.id==='page-'+page));
+  $$('#tabs button, #bottombar button').forEach(b=>b.classList.toggle('active', b.dataset.page===page));
+  window.scrollTo({top:0, behavior:'smooth'});
+}
+$$('#tabs button, #bottombar button').forEach(b => b.addEventListener('click', ()=>go(b.dataset.page)));
+
+/* ---------- intake form ---------- */
+$('#fCrop').innerHTML = CROPS.map(c=>`<option value="${esc(c)}">${esc(c)}</option>`).join('');
+$('#fCrop').addEventListener('change', ()=>{ $('#fCropOtherWrap').style.display = $('#fCrop').value==='อื่น ๆ' ? 'block':'none'; });
+
+$('#formIntake').addEventListener('submit', e => {
+  e.preventDefault();
+  const farmer = $('#fFarmer').value.trim();
+  const crop = $('#fCrop').value==='อื่น ๆ' ? $('#fCropOther').value.trim() : $('#fCrop').value;
+  const variety = $('#fVariety').value.trim();
+  const seasonId = $('#fSeason').value;
+  const weight = parseFloat($('#fWeight').value);
+  const germ = parseFloat($('#fGerm').value);
+  const moist = parseFloat($('#fMoist').value);
+  const purity = parseFloat($('#fPurity').value);
+  const vigor = parseFloat($('#fVigor').value);
+  const seedRaw = $('#fSeed1000').value.trim();
+  const seed1000 = seedRaw==='' ? null : parseFloat(seedRaw);
+  const notes = $('#fNotes').value.trim();
+  let bad = null;
+  const mark = (el,cond)=>{ el.classList.toggle('err', cond); if(cond && !bad) bad = el; };
+  mark($('#fFarmer'), !farmer);
+  mark($('#fVariety'), !variety);
+  mark($('#fCropOther'), $('#fCrop').value==='อื่น ๆ' && !crop);
+  mark($('#fWeight'), !(weight>0));
+  mark($('#fGerm'), !(germ>=0 && germ<=100));
+  mark($('#fMoist'), !(moist>=0 && moist<=100));
+  mark($('#fPurity'), !(purity>=0 && purity<=100));
+  mark($('#fVigor'), !(vigor>=0 && vigor<=100));
+  if(bad){ toast('กรุณากรอกข้อมูลให้ครบถ้วน (รวมชนิดสายพันธุ์, น้ำหนัก > 0, เปอร์เซ็นต์ 0–100)','err'); bad.focus(); return; }
+  if(!seasonId){ toast('ยังไม่มีฤดูกาล — กดปุ่ม ＋ ฤดูกาล เพื่อสร้างก่อน','err'); return; }
+
+  upsertFarmer(farmer);
+  S.db.intake.push({ id:uid('i'), ts:Date.now(), farmer, crop, variety, seasonId, weight, germ, moist, purity, vigor, seed1000, notes, rev:0, author:S.name||null });
+  saveLocal(); schedulePush();
+  toast('บันทึกรับเข้า: ' + farmer + ' • ' + fmt(weight) + ' กก.','ok');
+  $('#fWeight').value=''; $('#fGerm').value=''; $('#fMoist').value=''; $('#fPurity').value=''; $('#fVigor').value=''; $('#fSeed1000').value=''; $('#fVariety').value=''; $('#fNotes').value='';
+  $('#fFarmer').focus();
+  renderAll();
+});
+
+document.addEventListener('click', e => {
+  const del = e.target.closest('[data-del-intake]');
+  if(del){
+    const id = del.dataset.delIntake;
+    if(confirm('ลบรายการรับเข้านี้?')){ const r = S.db.intake.find(x=>x.id===id); if(r){ r.deleted=true; r.rev=(r.rev||0)+1; saveLocal(); schedulePush(); renderAll(); toast('ลบรายการแล้ว'); } }
+    return;
+  }
+  const ed = e.target.closest('[data-edit-intake]');
+  if(ed){ openEdit(ed.dataset.editIntake); return; }
+  const dl = e.target.closest('[data-del-lot]');
+  if(dl){
+    const id = dl.dataset.delLot;
+    const lot = S.db.lots.find(x=>x.id===id);
+    if(lot && lot.shipId){ toast('ล็อตนี้อยู่ในชุดส่งออกแล้ว — ยุบชุดส่งออกก่อนลบ','warn'); return; }
+    if(confirm('ลบล็อตนี้? (รายการรับเข้าจะกลับไปอยู่ในคิวรวมล็อต)')){
+      if(lot){
+        lot.deleted = true; lot.rev=(lot.rev||0)+1;
+        (lot.sources||[]).forEach(s => { const r = S.db.intake.find(x=>x.id===s.id); if(r && r.merged===lot.lotId){ delete r.merged; r.rev=(r.rev||0)+1; } });
+        saveLocal(); schedulePush(); renderAll(); toast('ลบล็อตแล้ว รายการรับเข้ากลับเข้าคิว');
+      }
+    }
+    return;
+  }
+  const ts2 = e.target.closest('[data-lot-to-ship]');
+  if(ts2){
+    const id = ts2.dataset.lotToShip;
+    if(S.shipSel.has(id)) S.shipSel.delete(id); else S.shipSel.add(id);
+    renderShip();
+    toast('เลือกล็อตแล้ว — ไปที่แท็บ "ชุดส่งออก" เพื่อจัดชุด','ok');
+    return;
+  }
+  const us = e.target.closest('[data-unship]');
+  if(us){
+    const sid = us.dataset.unship;
+    const ship = shipList().find(x=>x.id===sid);
+    if(ship && confirm('ยุบชุดส่งออก ' + ship.inv + '? ล็อตทุกล็อตจะกลับสู่สถานะเดิม')){
+      ship.deleted = true; ship.rev=(ship.rev||0)+1;
+      (ship.lots||[]).forEach(id=>{ const l = S.db.lots.find(x=>x.id===id); if(l){ l.status='ready'; delete l.shipId; l.exportDate=null; l.rev=(l.rev||0)+1; } });
+      saveLocal(); schedulePush(); renderAll(); toast('ยุบชุดส่งออกแล้ว ล็อตกลับสู่ "พร้อมส่งออก"');
+    }
+    return;
+  }
+  const pl = e.target.closest('[data-print-pack]');
+  if(pl){
+    const ship = shipList().find(s=>s.id===pl.dataset.printPack);
+    if(ship) doPrint('ใบปะหน้าสินค้า / Packing List — ' + ship.inv, packListHTML(ship));
+    return;
+  }
+  const lb = e.target.closest('[data-print-label]');
+  if(lb){
+    const lot = lotsList().find(l=>l.id===lb.dataset.printLabel);
+    if(lot) doPrint('ฉลากล็อตเมล็ดพันธุ์', '<div class="p-labels">' + labelHTML(lot) + '</div>');
+    return;
+  }
+  const fe = e.target.closest('[data-fedit]');
+  if(fe){ openFarmer(fe.dataset.fedit); return; }
+  const fh = e.target.closest('[data-fhist]');
+  if(fh){ openHist(fh.dataset.fhist); return; }
+  const fd = e.target.closest('[data-fdel]');
+  if(fd){
+    const code = fd.dataset.fdel;
+    const prof = (S.db.farmers||[]).find(f=>!f.deleted && f.code===code);
+    if(!prof){ toast('เกษตรกรนี้เพิ่มอัตโนมัติจากรายการรับเข้า — จะหายไปเมื่อไม่มีข้อมูลอ้างอิง','warn'); return; }
+    if(confirm('ลบโปรไฟล์เกษตรกร ' + code + '? (รายการรับเข้าเดิมจะไม่ถูกลบ)')){ prof.deleted=true; prof.rev=(prof.rev||0)+1; saveLocal(); schedulePush(); renderFarmers(); toast('ลบโปรไฟล์แล้ว'); }
+  }
+});
+
+/* ---------- filters ---------- */
+$('#fiQ').addEventListener('input', e=>{ S.fIntake.q=e.target.value; renderIntake(); });
+$('#fiFarmer').addEventListener('change', e=>{ S.fIntake.farmer=e.target.value; renderIntake(); });
+$('#fiFrom').addEventListener('change', e=>{ S.fIntake.from=e.target.value; renderIntake(); });
+$('#fiTo').addEventListener('change', e=>{ S.fIntake.to=e.target.value; renderIntake(); });
+$('#fiClear').addEventListener('click', ()=>{ S.fIntake={q:'',farmer:'',from:'',to:''}; $('#fiQ').value=''; $('#fiFrom').value=''; $('#fiTo').value=''; renderIntake(); });
+$('#fqQ').addEventListener('input', renderFarmers);
+
+/* ---------- merge page interactions ---------- */
+$('#mergeList').addEventListener('click', e => {
+  const row = e.target.closest('.farmer-row');
+  if(!row) return;
+  const key = row.dataset.gkey;
+  if(S.mergeSel.has(key)) S.mergeSel.delete(key); else S.mergeSel.add(key);
+  renderMerge();
+});
+$('#msCountry').addEventListener('input', renderMerge);
+
+$('#btnCreateLot').addEventListener('click', () => {
+  const groups = farmerGroups().filter(g=>S.mergeSel.has(g.key));
+  if(!groups.length){ toast('เลือกเกษตรกรก่อนอย่างน้อย 1 คน','err'); return; }
+  const cropSet = [...new Set(groups.map(g=>g.crop))];
+  if(cropSet.length!==1){ toast('เกษตรกรที่เลือกต้องเป็นชนิดพืชเดียวกัน','err'); return; }
+  const varSet = [...new Set(groups.map(g=>g.variety||''))];
+  if(varSet.length>1){ toast('เกษตรกรที่เลือกต้องเป็นสายพันธุ์เดียวกัน','err'); return; }
+  const country = $('#msCountry').value.trim();
+  if(!country){ toast('ระบุประเทศปลายทางก่อนสร้างล็อต','err'); $('#msCountry').focus(); return; }
+  const seasonId = S.season==='all' ? groups[0].ids && S.db.intake.find(r=>r.id===groups[0].ids[0]).seasonId : S.season;
+  const allIds = groups.flatMap(g=>g.ids);
+  const customName = $('#msLotName').value.trim();
+  const autoLotId = nextLotId();
+  const lot = {
+    id: uid('l'), lotId: customName || autoLotId, customName: customName || null, autoLotId, createdTs: Date.now(), ts: Date.now(),
+    crop: cropSet[0], variety: varSet[0] || '', seasonId, country,
+    weight: groups.reduce((a,g)=>a+g.weight,0),
+    germ: avg(groups.flatMap(g=>g.germ)),
+    moist: avg(groups.flatMap(g=>g.moist)),
+    purity: avg(groups.flatMap(g=>g.purity)),
+    vigor: avg(groups.flatMap(g=>g.vigor)),
+    seed1000: (()=>{ const v = groups.flatMap(g=>g.seed); return v.length ? avg(v) : null; })(),
+    sources: allIds.map(id => { const r = S.db.intake.find(x=>x.id===id); return {id, farmer:r.farmer, weight:r.weight}; }),
+    status:'wait', exportDate:null, rev:0, author:S.name||null,
+  };
+  allIds.forEach(id => { const r = S.db.intake.find(x=>x.id===id); if(r){ r.merged = lot.lotId; r.rev=(r.rev||0)+1; } });
+  S.db.lots.push(lot);
+  S.mergeSel.clear(); $('#msCountry').value=''; $('#msLotName').value='';
+  saveLocal(); schedulePush();
+  toast('สร้างล็อตใหม่ ' + lot.lotId + ' สำเร็จ (' + fmt(lot.weight) + ' กก.)','ok');
+  go('lots');
+  renderAll();
+});
+
+/* ---------- edit intake ---------- */
+function openEdit(id){
+  const r = S.db.intake.find(x=>x.id===id);
+  if(!r) return;
+  if(r.merged){ toast('รายการนี้รวมล็อตแล้ว — ยุบล็อตก่อนจึงจะแก้ไขได้','warn'); return; }
+  S.editId = id;
+  $('#edMeta').textContent = 'บันทึกเมื่อ ' + timeStr(r.ts) + ' • ฤดูกาล ' + seasonLabel(r.seasonId);
+  $('#edFarmer').value = r.farmer; $('#edCrop').value = r.crop; $('#edVariety').value = r.variety || '';
+  $('#edWeight').value = r.weight; $('#edSeed').value = r.seed1000 ?? '';
+  $('#edGerm').value = r.germ; $('#edMoist').value = r.moist;  $('#edPurity').value = r.purity; $('#edVigor').value = r.vigor ?? '';
+  $('#edNotes').value = r.notes || '';
+  $('#edSeason').innerHTML = activeSeasons().map(s=>`<option value="${esc(s.id)}">${esc(s.label)}</option>`).join('');
+  $('#edSeason').value = r.seasonId;
+  $('#ovEdit').classList.add('show');
+}
+$('#btnCancelEdit').addEventListener('click', ()=>{ $('#ovEdit').classList.remove('show'); S.editId=null; });
+$('#btnSaveEdit').addEventListener('click', () => {
+  const r = S.db.intake.find(x=>x.id===S.editId);
+  if(!r) return;
+  const farmer = $('#edFarmer').value.trim();
+  const crop = $('#edCrop').value.trim();
+  const variety = $('#edVariety').value.trim();
+  const weight = parseFloat($('#edWeight').value);
+  const germ = parseFloat($('#edGerm').value);
+  const moist = parseFloat($('#edMoist').value);
+  const purity = parseFloat($('#edPurity').value);
+  const vigorRaw = $('#edVigor').value.trim();
+  const vigor = vigorRaw==='' ? null : parseFloat(vigorRaw);
+  const seedRaw = $('#edSeed').value.trim();
+  if(!farmer || !crop || !variety || !(weight>0)){ toast('กรุณากรอกรหัสเกษตรกร ชนิดพืช สายพันธุ์ และน้ำหนักให้ครบ','err'); return; }
+  if(!(germ>=0&&germ<=100) || !(moist>=0&&moist<=100) || !(purity>=0&&purity<=100) || !(vigor==null || (vigor>=0&&vigor<=100))){ toast('เปอร์เซ็นต์ต้องอยู่ระหว่าง 0-100','err'); return; }
+  Object.assign(r, { farmer, crop, variety, weight, germ, moist, purity, vigor, seed1000: seedRaw===''?null:parseFloat(seedRaw), notes: $('#edNotes').value.trim(), seasonId: $('#edSeason').value || r.seasonId, rev:(r.rev||0)+1 });
+  upsertFarmer(farmer);
+  saveLocal(); schedulePush(); renderAll();
+  $('#ovEdit').classList.remove('show'); S.editId=null;
+  toast('แก้ไขรายการเรียบร้อย','ok');
+});
+
+/* ---------- shipment creation ---------- */
+function nextInv(){
+  let mx = 0;
+  shipList().forEach(s => { const m = /INV[-/]?(\d+)/i.exec(s.inv||''); if(m) mx = Math.max(mx, parseInt(m[1],10)); });
+  return 'INV-' + String(mx+1).padStart(4,'0');
+}
+$('#shipLotList').addEventListener('click', e => {
+  const row = e.target.closest('.farmer-row');
+  if(!row) return;
+  const id = row.dataset.lotKey;
+  if(S.shipSel.has(id)) S.shipSel.delete(id); else S.shipSel.add(id);
+  renderShip();
+});
+['#spInv','#spCountry'].forEach(sel => $(sel).addEventListener('input', renderShip));
+$('#btnCreateShip').addEventListener('click', () => {
+  const cand = lotsList().filter(l=>!l.shipId && S.shipSel.has(l.id));
+  if(!cand.length){ toast('เลือกล็อตก่อนอย่างน้อย 1 ล็อต','err'); return; }
+  const inv = $('#spInv').value.trim();
+  const country = $('#spCountry').value.trim();
+  if(!inv || !country){ toast('ระบุเลขที่ใบแจ้งหนี้ (INV) และประเทศปลายทางก่อน','err'); return; }
+  if(shipList().some(s=>s.inv.toLowerCase()===inv.toLowerCase())){ toast('มีเลข INV นี้อยู่แล้ว — ใช้เลขอื่น','err'); return; }
+  const ship = {
+    id: uid('sh'), inv, country, date: $('#spDate').value || todayISO(), ts: Date.now(),
+    lots: cand.map(l=>l.id),
+    weight: cand.reduce((a,l)=>a+(+l.weight||0),0),
+    germ: avg(cand.map(l=>+l.germ)), moist: avg(cand.map(l=>+l.moist)), purity: avg(cand.map(l=>+l.purity)), vigor: avg(cand.map(l=>+l.vigor)),
+    rev:0, author:S.name||null,
+  };
+  cand.forEach(l=>{ l.status='exported'; l.shipId=ship.id; l.exportDate=ship.date; l.rev=(l.rev||0)+1; });
+  S.db.shipments.push(ship);
+  S.shipSel.clear(); $('#spInv').value=''; $('#spCountry').value=''; $('#spDate').value='';
+  saveLocal(); schedulePush(); renderAll();
+  toast('สร้างชุดส่งออก ' + inv + ' → ' + country + ' (' + fmt(ship.weight) + ' กก.)','ok');
+});
+
+/* ---------- farmer profile modal ---------- */
+function openFarmer(code){
+  const prof = (S.db.farmers||[]).find(f=>!f.deleted && f.code===code);
+  S.farmerEditId = prof ? prof.id : null;
+  $('#farmerModalTitle').textContent = prof ? '✏️ แก้ไขเกษตรกร ' + code : '👨‍🌾 เพิ่มเกษตรกรใหม่';
+  $('#fCode').value = code || '';
+  $('#fPhone').value = prof?.phone || '';
+  $('#fArea').value = prof?.area || '';
+  $('#fAddress').value = prof?.address || '';
+  $('#ovFarmer').classList.add('show');
+  setTimeout(()=>$('#fCode').focus(), 50);
+}
+$('#btnAddFarmer').addEventListener('click', ()=>openFarmer(''));
+$('#btnCancelFarmer').addEventListener('click', ()=>$('#ovFarmer').classList.remove('show'));
+$('#btnSaveFarmer').addEventListener('click', () => {
+  const code = $('#fCode').value.trim();
+  if(!code){ toast('ระบุรหัส/ชื่อเกษตรกร','err'); return; }
+  let prof = (S.farmerEditId && (S.db.farmers||[]).find(f=>f.id===S.farmerEditId)) || (S.db.farmers||[]).find(f=>!f.deleted && f.code===code);
+  if(prof){ Object.assign(prof, {code, phone:$('#fPhone').value.trim(), area:$('#fArea').value.trim(), address:$('#fAddress').value.trim(), rev:(prof.rev||0)+1}); }
+  else { S.db.farmers.push({id:uid('f'), code, phone:$('#fPhone').value.trim(), area:$('#fArea').value.trim(), address:$('#fAddress').value.trim(), rev:0}); }
+  saveLocal(); schedulePush(); renderFarmers();
+  $('#ovFarmer').classList.remove('show');
+  toast('บันทึกข้อมูลเกษตรกร ' + code + ' แล้ว','ok');
+});
+$('#btnCloseHist').addEventListener('click', ()=>$('#ovHist').classList.remove('show'));
+$('#lotsGrid').addEventListener('click', e => {
+  const btn = e.target.closest('[data-set-status]');
+  if(!btn) return;
+  const lotEl = btn.closest('.lot');
+  const lot = S.db.lots.find(x=>x.id===lotEl.dataset.lot);
+  if(!lot) return;
+  if(lot.shipId){ toast('ล็อตนี้ถูกจัดในชุดส่งออกแล้ว (INV) — ยุบชุดก่อนเปลี่ยนสถานะ','warn'); return; }
+  const st = btn.dataset.setStatus;
+  if(st==='exported'){
+    lot.status='exported'; lot.exportDate = lot.exportDate || todayISO();
+    toast('ล็อต ' + lot.lotId + ' ส่งออกแล้ว — ตรวจสอบวันที่ส่งออกด้านล่าง','ok');
+  } else {
+    lot.status = st; if(st!=='exported') lot.exportDate = null;
+  }
+  lot.rev=(lot.rev||0)+1;
+  saveLocal(); schedulePush(); renderLots(); renderDash();
+});
+$('#lotsGrid').addEventListener('change', e => {
+  if(e.target.matches('[data-export-date]')){
+    const lotEl = e.target.closest('.lot');
+    const lot = S.db.lots.find(x=>x.id===lotEl.dataset.lot);
+    if(lot){ lot.exportDate = e.target.value || todayISO(); lot.rev=(lot.rev||0)+1; saveLocal(); schedulePush(); renderDash(); toast('บันทึกวันที่ส่งออก: ' + thaiDate(lot.exportDate),'ok'); }
+  }
+});
+
+/* ---------- seasons ---------- */
+$('#btnAddSeason').addEventListener('click', () => {
+  $('#sYear').value = new Date().getFullYear() + 543;
+  $('#sSeg').value = '1'; $('#sCustom').value='';
+  $('#ovSeason').classList.add('show');
+  setTimeout(()=>$('#sYear').focus(),50);
+});
+$('#btnCancelSeason').addEventListener('click', ()=>$('#ovSeason').classList.remove('show'));
+$('#btnConfirmSeason').addEventListener('click', () => {
+  const custom = $('#sCustom').value.trim();
+  const label = custom || ($('#sYear').value + '/' + $('#sSeg').value);
+  if(!label || label==='undefined/undefined'){ toast('ระบุปีให้ถูกต้อง','err'); return; }
+  if(activeSeasons().find(s=>s.label===label)){ toast('มีฤดูกาล "'+label+'" อยู่แล้ว','err'); return; }
+  const s = { id: uid('s'), label, rev:0 };
+  S.db.seasons.push(s);
+  S.season = s.id;
+  saveLocal(); schedulePush(); renderAll();
+  $('#ovSeason').classList.remove('show');
+  toast('เพิ่มฤดูกาล ' + label + ' แล้ว','ok');
+});
+$('#seasonFilter').addEventListener('change', e => { S.season = e.target.value; renderAll(); });
+
+/* ---------- share / room ---------- */
+function shareURL(){ return location.origin + location.pathname + '?room=' + encodeURIComponent(S.room); }
+function refreshShare(){
+  $('#shareLink').value = shareURL();
+  $('#roomLbl').value = S.room;
+  $('#userName').value = S.name || '';
+  $('#fbUrl').value = fbURL();
+  /* เตือนเมื่อรันจากเครื่องตัวเอง (localhost / file:// / IP ภายใน) — ลิงก์ยังเปิดจากอุปกรณ์อื่นไม่ได้ */
+  const h = location.hostname;
+  const isLocal = location.protocol==='file:' || !h || /^(localhost|127\.|0\.0\.0\.0|192\.168\.|10\.|172\.(1[6-9]|2\d|3[01])\.)/.test(h.replace(/^\[|\]$/g,''));
+  $('#shareLocalWarn').style.display = isLocal ? 'block' : 'none';
+}
+$('#btnShare').addEventListener('click', ()=>{ refreshShare(); $('#ovShare').classList.add('show'); });
+$('#btnCloseShare').addEventListener('click', ()=>$('#ovShare').classList.remove('show'));
+$$('.overlay').forEach(ov => ov.addEventListener('click', e => { if(e.target===ov) ov.classList.remove('show'); }));
+$('#btnCopy').addEventListener('click', async () => {
+  const v = $('#shareLink').value;
+  try{ await navigator.clipboard.writeText(v); toast('คัดลอกลิงก์แล้ว — ส่งให้เพื่อนร่วมทีมได้เลย','ok'); }
+  catch(e){ $('#shareLink').select(); document.execCommand('copy'); toast('คัดลอกลิงก์แล้ว','ok'); }
+});
+$('#btnFbSave').addEventListener('click', async () => {
+  const url = $('#fbUrl').value.trim();
+  if(!url){ localStorage.removeItem(FB_KEY); fbStream && fbStream.close(); fbStream=null; toast('ยกเลิกการใช้ Firebase แล้ว — กลับไปใช้คลาวด์ปกติ','ok'); return; }
+  const t = await fbTest(url);
+  if(!t.ok){ toast('เชื่อมต่อ Firebase ไม่สำเร็จ (' + t.status + ') — เช็คว่าเปิด Rules ให้ read/write แล้ว','err'); return; }
+  localStorage.setItem(FB_KEY, url);
+  fbConnect(); fbPull(true); fbPush();
+  toast('เชื่อมต่อ Firebase สำเร็จ — ข้อมูลจะเซฟซ้ำแบบเรียลไทม์','ok');
+});
+$('#btnNewRoom').addEventListener('click', () => {
+  if(!confirm('สร้างห้องใหม่? ห้องใหม่จะเริ่มข้อมูลว่างเปล่า แยกจากห้องปัจจุบัน (กลับมาได้โดยเปิดลิงก์เดิม)')) return;
+  const room = 'r' + Math.random().toString(36).slice(2,8);
+  location.href = location.origin + location.pathname + '?room=' + room;
+});
+
+/* ---------- printing ---------- */
+function pStamp(){
+  $('#pStamp').innerHTML = 'พิมพ์: ' + new Date().toLocaleString('th-TH',{dateStyle:'medium', timeStyle:'short'}) + '<br>โดย: ' + esc(S.name||'ไม่ระบุ') + ' • ห้อง: ' + esc(S.room);
+}
+function pKv(rows){
+  return '<table class="p-table">' + rows.map(([k,v])=>`<tr><th style="width:32%">${k}</th><td>${v}</td></tr>`).join('') + '</table>';
+}
+function pNum(n,u){ return (Number(n)||0).toLocaleString('th-TH',{maximumFractionDigits:2}) + (u?' '+u:''); }
+function pPct(n){ return (n==null||isNaN(n)) ? '—' : pNum(n,'%'); }
+function doPrint(title, bodyHtml){
+  $('#pDocTitle').textContent = title;
+  $('#printBody').innerHTML = bodyHtml;
+  pStamp();
+  setTimeout(()=>window.print(), 80);
+}
+function packListHTML(ship){
+  const lots = (ship.lots||[]).map(id=>S.db.lots.find(x=>x.id===id)).filter(Boolean);
+  const rows = lots.map((l,i)=>{
+    const fs = [...new Set((l.sources||[]).map(s=>s.farmer))].join(', ');
+    return `<tr><td>${i+1}</td><td>${esc(l.lotId)}${l.autoLotId&&l.customName?`<br><small style="color:#666">(${esc(l.autoLotId)})</small>`:''}</td><td>${esc(l.crop)}${l.variety?` / ${esc(l.variety)}`:''}</td><td>${esc(fs)}</td><td class="num">${pNum(l.germ)}%</td><td class="num">${pNum(l.moist)}%</td><td class="num">${pNum(l.purity)}%</td><td class="num">${pNum(l.vigor)}%</td><td class="num">${pNum(l.weight,'กก.')}</td></tr>`;
+  }).join('');
+  return `
+  <div class="p-meta">
+    <b>เลขที่ใบแจ้งหนี้ (INV.):</b> ${esc(ship.inv)} &nbsp;&nbsp;|&nbsp;&nbsp; <b>ประเทศปลายทาง:</b> ${esc(ship.country)}<br>
+    <b>วันที่จัดส่ง:</b> ${thaiDate(ship.date)} &nbsp;&nbsp;|&nbsp;&nbsp; <b>จำนวนล็อต:</b> ${lots.length} ล็อต
+  </div>
+  <table class="p-table">
+    <thead><tr><th>#</th><th>เบอร์ล็อต</th><th>พืช / สายพันธุ์</th><th>เกษตรกร</th><th>งอก%</th><th>ชื้น%</th><th>บริสุทธิ์%</th><th>แข็งแรง%</th><th>น้ำหนัก</th></tr></thead>
+    <tbody>${rows}
+      <tr class="p-tot"><td colspan="8">รวมทั้งสิ้น</td><td class="num">${pNum(ship.weight,'กก.')}</td></tr>
+    </tbody>
+  </table>
+  ${pKv([['คุณภาพเฉลี่ยชุดนี้', `งอก ${pPct(ship.germ)} • ชื้น ${pPct(ship.moist)} • บริสุทธิ์ ${pPct(ship.purity)} • แข็งแรง ${pPct(ship.vigor)}`]])}
+  <div class="p-sign"><div><div class="line">จัดทำโดย</div></div><div><div class="line">ตรวจสอบโดย</div></div><div><div class="line">ผู้รับสินค้า</div></div></div>
+  <div class="p-note">เอกสารนี้สร้างโดยระบบจัดการเมล็ดพันธุ์ บริษัท มิ่งการเกษตร — ข้อมูล ณ วันที่พิมพ์</div>`;
+}
+function labelHTML(l){
+  return `<div class="p-label">
+    <div class="lt">🏷 ${esc(l.lotId)}</div>
+    <div class="ls">${l.customName?`รหัสระบบ: ${esc(l.autoLotId)} • `:''}${esc(seasonLabel(l.seasonId))} • ${STATUS[l.status]?.t||''}</div>
+    <table>
+      <tr><td>ชนิดพืช</td><td><b>${esc(l.crop)}${l.variety?` — ${esc(l.variety)}`:''}</b></td></tr>
+      <tr><td>ประเทศปลายทาง</td><td><b>${esc(l.country)}</b></td></tr>
+      <tr><td>น้ำหนักสุทธิ</td><td><b>${pNum(l.weight,'กิโลกรัม')}</b></td></tr>
+      <tr><td>ความงอก / ความชื้น</td><td>${pPct(l.germ)} / ${pPct(l.moist)}</td></tr>
+      <tr><td>บริสุทธิ์ / แข็งแรง</td><td>${pPct(l.purity)} / ${pPct(l.vigor)}</td></tr>
+      <tr><td>1,000 เมล็ด</td><td>${l.seed1000!=null?pNum(l.seed1000,'กรัม'):'—'}</td></tr>
+      <tr><td>เกษตรกร</td><td>${esc([...new Set((l.sources||[]).map(s=>s.farmer))].join(', '))}</td></tr>
+      ${l.exportDate?`<tr><td>วันที่ส่งออก</td><td>${thaiDate(l.exportDate)}</td></tr>`:''}
+    </table>
+  </div>`;
+}
+function intakeTableHTML(){
+  const rows = inSeason(intakeList()).sort((a,b)=>a.ts-b.ts).map((r,i)=>`<tr><td>${i+1}</td><td>${timeStr(r.ts)}</td><td class="nw">${esc(r.crop)}${r.variety?` / ${esc(r.variety)}`:''}</td><td class="nw">${esc(r.farmer)}</td><td class="num">${pNum(r.weight,'')}</td><td class="num">${pPct(r.moist)}</td><td class="num">${pPct(r.vigor)}</td><td class="num">${pPct(r.germ)}</td><td class="num">${pPct(r.purity)}</td><td>${r.notes?esc(r.notes):''}</td><td>${r.merged?esc(r.merged):'รอรวมล็อต'}</td></tr>`).join('');
+  const total = inSeason(intakeList()).reduce((a,r)=>a+(+r.weight||0),0);
+  return `<div class="p-meta"><b>ฤดูกาล:</b> ${S.season==='all'?'ทุกฤดูกาล':esc(seasonLabel(S.season))} &nbsp;|&nbsp; <b>จำนวน:</b> ${inSeason(intakeList()).length} รายการ</div>
+  <table class="p-table compact"><thead><tr><th>#</th><th>วันที่</th><th>พืช / สายพันธุ์</th><th>รหัสเกษตรกร</th><th>น้ำหนัก(กก.)</th><th>ชื้น%</th><th>แข็งแรง%</th><th>งอก%</th><th>บริสุทธิ์%</th><th>ข้อเสนอแนะ</th><th>ล็อต</th></tr></thead><tbody>${rows}<tr class="p-tot"><td colspan="4">รวมทั้งสิ้น</td><td class="num">${pNum(total,'')}</td><td colspan="6"></td></tr></tbody></table>`;
+}
+function reportTableHTML(){
+  const rep = new Map();
+  inSeason(lotsList()).filter(l=>l.status==='exported').forEach(l=>{
+    const ship = shipList().find(s=>s.id===l.shipId);
+    const country = ship?.country || l.country || 'ไม่ระบุ';
+    (l.sources||[]).forEach(src=>{ const r = rep.get(src.farmer)||{}; r[country]=(r[country]||0)+(+src.weight||0); rep.set(src.farmer, r); });
+  });
+  const rows = [...rep.keys()].sort((a,b)=>a.localeCompare(b,'th')).map((f,i)=>{
+    const c = rep.get(f); const total = Object.values(c).reduce((a,b)=>a+b,0);
+    return `<tr><td>${i+1}</td><td class="nw">${esc(f)}</td><td>${Object.keys(c).map(k=>`${esc(k)}: ${pNum(c[k],'กก.')}`).join(' • ')}</td><td class="num">${pNum(total,'กก.')}</td></tr>`;
+  }).join('');
+  return `<div class="p-meta"><b>ฤดูกาล:</b> ${S.season==='all'?'ทุกฤดูกาล':esc(seasonLabel(S.season))} — สรุปน้ำหนักเมล็ดพันธุ์ที่แต่ละรหัสเกษตรกรถูกส่งออกไปยังแต่ละประเทศ</div>
+  <table class="p-table"><thead><tr><th>#</th><th>รหัสเกษตรกร</th><th>ประเทศปลายทาง (น้ำหนัก)</th><th>รวมส่งออก</th></tr></thead><tbody>${rows||'<tr><td colspan="4">ไม่มีข้อมูล</td></tr>'}</tbody></table>`;
+}
+$('#btnPrintIntake').addEventListener('click', ()=>doPrint('รายงานรับเข้าเมล็ดพันธุ์', intakeTableHTML()));
+$('#btnPrintReport').addEventListener('click', ()=>doPrint('รายงานเกษตรกร × ประเทศปลายทาง', reportTableHTML()));
+
+/* ---------- Firebase custom backend (optional) ---------- */
+const FB_KEY = 'pfseed_firebase_url';
+function fbURL(){ return (localStorage.getItem(FB_KEY)||'').replace(/\/$/,''); }
+async function fbPush(){
+  const url = fbURL(); if(!url) return;
+  try{ await fetch(url + '/db.json?x=' + Date.now(), {method:'PUT', headers:{'Content-Type':'application/json'}, body: JSON.stringify(S.db)}); }catch(e){}
+}
+async function fbPull(){
+  const url = fbURL(); if(!url) return false;
+  try{
+    const r = await fetch(url + '/db.json');
+    const j = await r.json();
+    if(j && j.seasons){ if(mergeRemote(j)){ saveLocal(); renderAll(); } return true; }
+  }catch(e){}
+  return false;
+}
+let fbStream = null;
+function fbConnect(){
+  if(fbStream){ fbStream.close(); fbStream = null; }
+  const url = fbURL(); if(!url) return;
+  try{
+    const es = new EventSource(url + '/db.json');
+    es.onmessage = () => { clearTimeout(fbConnect._t); fbConnect._t = setTimeout(fbPull, 700); };
+    fbStream = es;
+  }catch(e){}
+}
+async function fbTest(url){
+  try{
+    const clean = url.replace(/\/$/,'');
+    const r = await fetch(clean + '/.json?x=' + Date.now(), {method:'PUT', headers:{'Content-Type':'application/json'}, body: JSON.stringify({_ping: Date.now()})});
+    return {ok: r.ok, status: r.status};
+  }catch(e){ return {ok:false, status: e.message}; }
+}
+$('#btnCsvIntake').addEventListener('click', () => {
+  const rows = inSeason(intakeList()).sort((a,b)=>a.ts-b.ts);
+  if(!rows.length){ toast('ยังไม่มีข้อมูลให้ส่งออก','warn'); return; }
+  const head = ['วันที่','ชนิดพืช','สายพันธุ์','รหัสเกษตรกร','น้ำหนัก(กก.)','ชื้น%','แข็งแรง%','งอก%','บริสุทธิ์%','1000เมล็ด','ข้อเสนอแนะ','ฤดูกาล','รวมล็อตแล้ว'];
+  const csvCell = v => { v = String(v); return /[",\n]/.test(v) ? '"' + v.replace(/"/g,'""') + '"' : v; };
+  const body = rows.map(r => [new Date(r.ts).toLocaleString('th-TH'), r.crop, r.variety||'', r.farmer, r.weight, r.moist, r.vigor??'', r.germ, r.purity, r.seed1000??'', r.notes||'', seasonLabel(r.seasonId), r.merged||''].map(csvCell).join(','));
+  const csv = '\uFEFF' + [head.join(','), ...body].join('\n');
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([csv], {type:'text/csv;charset=utf-8'}));
+  a.download = 'intake-' + (S.season==='all'?'all':seasonLabel(S.season)) + '.csv';
+  a.click(); URL.revokeObjectURL(a.href);
+  toast('ส่งออก CSV แล้ว','ok');
+});
+
+/* ---------- init ---------- */
+(function init(){
+  const p = new URLSearchParams(location.search);
+  if(p.get('room')) S.room = p.get('room').replace(/[^a-zA-Z0-9_-]/g,'').slice(0,30) || DEFAULT_ROOM;
+  if(!p.get('room')) history.replaceState(null,'', location.pathname + '?room=' + encodeURIComponent(S.room));
+  const hadLocal = loadLocal();
+  /* เครื่องใหม่ (ไม่มีข้อมูลในเครื่อง) รอดึงจากคลาวด์ก่อน ห้ามสร้างฤดูกาลเอง */
+  if(hadLocal && ensureSeason()) saveLocal();
+  $('#fSeason').innerHTML = activeSeasons().map(s=>`<option value="${esc(s.id)}">${esc(s.label)}</option>`).join('');
+  S.season = 'all';
+  renderAll();
+
+  /* ---- ประตูล็อกอิน (ไอดีใครไอดีมัน) ---- */
+  const sess = getSession();
+  const cached = localUsers();
+  const known = sess && (cached.length === 0 || cached.some(u => String(u.username) === sess.username));
+  if(sess && known){
+    S.name = sess.username;
+    startApp();
+  } else {
+    if(sess && !known){ clearSession(); }
+    S.name = '';
+    showAuth();
+  }
+})();
+</script>
+</body>
+</html>
